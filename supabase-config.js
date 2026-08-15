@@ -4,6 +4,6 @@
   Never paste a Secret / service_role key into this file.
 */
 window.LBC_SUPABASE = {
-  url: "",
-  key: ""
+  url: "https://hrshwcyppwwpwlumfnaz.supabase.co",
+  key: "sb_publishable_VwqN7LnEiinQ2_kcAy2JTw_H6Y0yKtO"
 };
