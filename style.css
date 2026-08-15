@@ -1,0 +1,204 @@
+[hidden]{display:none!important}
+*{box-sizing:border-box}:root{--gold:#d6aa54;--text:#f8f3e8;--muted:#c9bfd4}body{margin:0;background:radial-gradient(circle at top,#32194a,#0d0913 58%);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:14px;min-height:100vh}button,select,input{font:inherit;border:1px solid #8c68b3;background:#291a3b;color:#fff;border-radius:12px;padding:11px 12px;font-weight:700}button{cursor:pointer}button:disabled{opacity:.38;cursor:not-allowed}.app{max-width:1200px;margin:auto}.intro{min-height:88vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px}.intro h1{font-size:clamp(2.4rem,8vw,5rem);margin:0}.intro p{color:var(--muted);font-size:1.2rem}.intro small{border:1px solid #7a579e;border-radius:999px;padding:7px 12px}.primary{background:linear-gradient(#8b51ca,#5d268f)}.danger{background:#672530}header{display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap}header h1{margin:0;color:var(--gold)}header p{margin:.3rem 0 0;color:var(--muted)}.setup{display:grid;grid-template-columns:repeat(6,minmax(130px,1fr));gap:10px;margin:18px 0 10px}.setup label{display:flex;flex-direction:column;gap:6px;color:var(--muted);font-weight:700}.strip,.switch{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:12px 0;padding:12px 14px;border:1px solid #65458a;background:#171020;border-radius:14px}.strip i{font-style:normal;color:#ffd86a}.controls{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}.switch>div:last-child{display:flex;gap:8px}.switch p{margin:3px 0;color:var(--muted)}.layout{display:grid;grid-template-columns:minmax(0,1fr) 250px;gap:16px;align-items:start}.board{position:relative;overflow:hidden;background:linear-gradient(145deg,#8c5a2b,#4e2c14);border:8px solid #3d210f;border-radius:26px;padding:22px;box-shadow:0 20px 45px #0009,inset 0 0 0 3px #b77c3c}.watermark{position:absolute;inset:0;display:grid;place-items:center;font-size:min(40vw,26rem);font-weight:900;color:#d6aa5415;pointer-events:none}.felt{position:relative;background:radial-gradient(circle at 50% 20%,#41225e,#1b0d2a 70%);border-radius:18px;padding:22px;min-height:470px;box-shadow:inset 0 0 34px #000a}.tiles{display:flex;gap:7px;justify-content:center;flex-wrap:wrap;padding:8px 2px 18px}.tile{min-width:48px;height:78px;border-radius:10px;border:2px solid #3f260f;background:linear-gradient(90deg,#c7904d,#e2b46e 50%,#b77738);color:#21140a;font-size:1.45rem;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 7px 0 #4e2b13,0 10px 16px #0007;transition:.25s;user-select:none}.tile.open{cursor:pointer}.tile.selected{transform:translateY(-8px);outline:4px solid #ffd86a}.tile.closed{transform:rotateX(78deg);opacity:.25;box-shadow:none;pointer-events:none}.arena{height:160px;position:relative;overflow:hidden;border:1px solid #55336e;border-radius:16px;background:#12091d66;perspective:900px}.dice{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:26px}.cubeWrap{width:74px;height:74px;position:relative;transform-style:preserve-3d}.cubeWrap.rolling{animation:travel .9s cubic-bezier(.2,.8,.25,1)}@keyframes travel{0%{transform:translate(-260px,-70px) rotate(0) scale(.8)}35%{transform:translate(-40px,20px) rotate(180deg) scale(1.05)}70%{transform:translate(35px,-8px) rotate(320deg)}100%{transform:translate(0,0) rotate(360deg)}}.cube{width:74px;height:74px;position:absolute;transform-style:preserve-3d;transition:transform .25s}.face{position:absolute;width:74px;height:74px;border-radius:15px;background:linear-gradient(145deg,#fff,#dfd9cf);border:2px solid #cfc6b8;box-shadow:inset 0 2px 5px #fff}.front{transform:translateZ(37px)}.back{transform:rotateY(180deg) translateZ(37px)}.right{transform:rotateY(90deg) translateZ(37px)}.left{transform:rotateY(-90deg) translateZ(37px)}.top{transform:rotateX(90deg) translateZ(37px)}.bottom{transform:rotateX(-90deg) translateZ(37px)}.pip{position:absolute;width:14px;height:14px;border-radius:50%;background:#25152f;transform:translate(-50%,-50%);box-shadow:inset 0 2px 3px #0008}.tl{left:24%;top:24%}.tr{left:76%;top:24%}.ml{left:24%;top:50%}.mc{left:50%;top:50%}.mr{left:76%;top:50%}.bl{left:24%;top:76%}.br{left:76%;top:76%}.ai,.message{text-align:center;min-height:34px;margin-top:8px}.ai{color:#f0d79d;font-style:italic}.message{color:#f3dfad}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.cards>div{background:#160e20cc;border:1px solid #65458a;border-radius:14px;padding:13px;text-align:center}.cards strong{display:block;font-size:2rem;color:#ffd86a}aside{background:#171020;border:1px solid #65458a;border-radius:18px;padding:16px;position:sticky;top:14px}aside h2{margin:0 0 12px;color:var(--gold);text-align:center}.roundRow{display:flex;justify-content:space-between;padding:9px 10px;border-radius:10px;background:#241732;margin-bottom:8px}.roundRow.current{outline:2px solid #8b51ca}.sum{display:flex;justify-content:space-between;border-top:1px solid #65458a;padding-top:13px;margin-top:13px}.sum b{color:#ffd86a}.rules{background:#171020;border:1px solid #4e3767;border-radius:16px;padding:16px;color:#ddd3e4}.overlay{position:fixed;inset:0;background:#090510dd;display:grid;place-items:center;z-index:20}.overlay>div{text-align:center;background:#21142e;border:2px solid var(--gold);border-radius:22px;padding:26px;max-width:460px}.trophy{font-size:4rem}.confetti{position:fixed;top:-20px;width:10px;height:16px;z-index:30;animation:fall 2.8s linear forwards}@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}@media(max-width:1050px){.setup{grid-template-columns:repeat(3,1fr)}}@media(max-width:880px){.layout{grid-template-columns:1fr}aside{position:static}}@media(max-width:650px){body{padding:9px}.setup{grid-template-columns:1fr}.controls>*{width:100%}.switch>div:last-child{width:100%}.switch>div:last-child>*{flex:1}.cards{grid-template-columns:1fr}.tile{min-width:42px;height:68px}.cubeWrap,.cube,.face{width:62px;height:62px}.front{transform:translateZ(31px)}.back{transform:rotateY(180deg) translateZ(31px)}.right{transform:rotateY(90deg) translateZ(31px)}.left{transform:rotateY(-90deg) translateZ(31px)}.top{transform:rotateX(90deg) translateZ(31px)}.bottom{transform:rotateX(-90deg) translateZ(31px)}}
+/* =========================================================
+   Box Challenge v0.3.1 — Mobile Edition
+   Mobile-first layout patch; desktop rules above remain intact.
+   ========================================================= */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{overflow-x:hidden}
+button,select,input{touch-action:manipulation}
+
+@media(max-width:650px){
+  body{padding:6px;padding-left:max(6px,env(safe-area-inset-left));padding-right:max(6px,env(safe-area-inset-right));padding-bottom:max(8px,env(safe-area-inset-bottom))}
+  .app{width:100%;max-width:100%;overflow-x:hidden}
+  .intro{min-height:calc(100dvh - 12px);gap:7px;padding:12px 4px}
+  
+  .intro h1{font-size:clamp(2rem,11vw,3.2rem);line-height:.98;letter-spacing:-.03em}
+  .intro p{font-size:1rem;margin:.45rem 0}
+  .intro button{width:auto;min-width:132px;min-height:50px;font-size:1.08rem}
+
+  header{gap:8px;padding:2px 2px 0}
+  header>div{width:100%}
+  header h1{font-size:clamp(1.35rem,7vw,1.85rem);line-height:1.05}
+  header p{font-size:.82rem}
+  
+
+  .setup{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:10px 0 8px}
+  .setup label{font-size:.78rem;min-width:0;gap:4px}
+  .setup label:last-child:nth-child(odd){grid-column:1/-1}
+  button,select,input{min-height:44px;padding:9px 10px;border-radius:10px;font-size:.92rem;max-width:100%}
+  select{width:100%;white-space:nowrap;text-overflow:ellipsis}
+
+  .strip,.switch{margin:8px 0;padding:9px 10px;gap:7px;border-radius:12px;font-size:.84rem}
+  .strip>*{min-width:0}
+  .switch>div:first-child{width:100%}
+  .switch>div:last-child{display:grid;grid-template-columns:1fr 1fr;gap:6px;width:100%}
+  .switch>div:last-child>*{width:100%;min-width:0}
+  .controls{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:9px 0}
+  .controls>*{width:100%;min-width:0}
+  .controls>*:only-child{grid-column:1/-1}
+
+  .layout{display:block;width:100%}
+  .board{width:100%;border-width:5px;border-radius:17px;padding:8px;box-shadow:0 10px 24px #0008,inset 0 0 0 2px #b77c3c}
+  .watermark{font-size:min(68vw,15rem)}
+  .felt{padding:9px 5px;border-radius:12px;min-height:0}
+
+  /* Numbers always stay inside the phone: no sideways scrolling. */
+  .tiles{display:grid!important;grid-template-columns:repeat(9,minmax(0,1fr));gap:3px;width:100%;overflow:visible!important;padding:5px 0 10px;justify-content:stretch}
+  .tile{min-width:0!important;width:100%!important;height:auto!important;aspect-ratio:.68;border-radius:6px;border-width:1px;font-size:clamp(.66rem,3.45vw,1rem);box-shadow:0 4px 0 #4e2b13,0 5px 8px #0006}
+  .tile.selected{transform:translateY(-4px);outline:2px solid #ffd86a}
+  .tile.closed{transform:rotateX(72deg)}
+
+  .dice{gap:8px;margin:8px 0;min-height:58px;align-items:center;flex-wrap:nowrap}
+  .cubeWrap{width:56px!important;height:56px!important;min-width:56px}
+  .cube,.face{width:56px!important;height:56px!important}
+  .face{border-radius:11px}
+  .front{transform:translateZ(28px)!important}.back{transform:rotateY(180deg) translateZ(28px)!important}.right{transform:rotateY(90deg) translateZ(28px)!important}.left{transform:rotateY(-90deg) translateZ(28px)!important}.top{transform:rotateX(90deg) translateZ(28px)!important}.bottom{transform:rotateX(-90deg) translateZ(28px)!important}
+  .pip{width:10px;height:10px}
+  .ai,.message{min-height:26px;margin-top:5px;font-size:.82rem;line-height:1.25}
+
+  .cards{grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+  .cards>div{padding:7px 3px;border-radius:10px;font-size:.68rem;min-width:0}
+  .cards strong{font-size:1.25rem}
+
+  aside{margin-top:9px;padding:10px;border-radius:13px;position:static}
+  aside h2{font-size:1rem;margin-bottom:7px}
+  .roundRow{padding:6px 8px;margin-bottom:5px;font-size:.78rem}
+  .sum{padding-top:8px;margin-top:8px;font-size:.84rem}
+  .rules{margin-top:9px;padding:10px;border-radius:12px;font-size:.78rem;line-height:1.35}
+  .overlay{padding:12px}
+  .overlay>div{width:min(100%,390px);padding:18px 12px;border-radius:17px}
+  .trophy{font-size:3rem}
+}
+
+@media(max-width:390px){
+  .setup{grid-template-columns:1fr 1fr}
+  .tiles{gap:2px}
+  .tile{font-size:clamp(.58rem,3.3vw,.88rem);border-radius:5px}
+  .board{padding:6px;border-width:4px}
+  .felt{padding:7px 3px}
+  .cubeWrap{width:50px!important;height:50px!important;min-width:50px}
+  .cube,.face{width:50px!important;height:50px!important}
+  .front{transform:translateZ(25px)!important}.back{transform:rotateY(180deg) translateZ(25px)!important}.right{transform:rotateY(90deg) translateZ(25px)!important}.left{transform:rotateY(-90deg) translateZ(25px)!important}.top{transform:rotateX(90deg) translateZ(25px)!important}.bottom{transform:rotateX(-90deg) translateZ(25px)!important}
+  .pip{width:9px;height:9px}
+}
+
+@media(orientation:landscape) and (max-height:500px){
+  .intro{min-height:100dvh}.intro h1{font-size:2rem}
+  .setup{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+
+/* =========================================================
+   Limato Box Challenge v0.3.2 — Mobile UX + square dice + Help
+   ========================================================= */
+.flatDie{
+  width:100%;height:100%;aspect-ratio:1/1;position:absolute;inset:0;
+  border-radius:15px;background:linear-gradient(145deg,#fff,#dfd9cf);
+  border:2px solid #cfc6b8;box-shadow:0 8px 18px #0007,inset 0 2px 5px #fff;
+}
+.flatDie[hidden]{display:none!important}
+.cubeWrap{flex:0 0 auto;aspect-ratio:1/1}
+
+.helpFab{
+  position:fixed;right:18px;bottom:18px;z-index:18;width:50px;height:50px;padding:0;
+  border-radius:50%;font-size:1.35rem;font-weight:900;background:linear-gradient(#9a5adc,#63299a);
+  box-shadow:0 8px 24px #0008;border:2px solid #d6aa54;color:white;
+}
+.helpCard{position:relative;text-align:left!important;max-width:720px!important;max-height:min(82vh,760px);overflow:auto;padding:28px!important}
+.helpCard h2{text-align:center;color:var(--gold);margin:0 38px 18px}
+.helpCard h3{color:#ffd86a;margin:14px 0 4px;font-size:1.05rem}
+.helpCard p{margin:0;color:#eee5f2;line-height:1.45}
+.helpCard section{padding-bottom:8px;border-bottom:1px solid #4e376766}
+.helpCard section:last-of-type{border-bottom:0}
+.helpClose{position:absolute;right:10px;top:10px;width:38px;height:38px;padding:0;border-radius:50%;font-size:1.6rem;line-height:1}
+#helpOk{display:block;margin:18px auto 0;min-width:120px}
+
+@media(max-width:650px){
+  .helpFab{right:max(10px,env(safe-area-inset-right));bottom:max(10px,env(safe-area-inset-bottom));width:44px;height:44px;font-size:1.15rem}
+  .helpCard{width:100%!important;max-height:86dvh;padding:20px 14px!important;border-radius:16px!important}
+  .helpCard h2{font-size:1.25rem;margin-bottom:12px}
+  .helpCard h3{font-size:.96rem}.helpCard p{font-size:.86rem}
+
+  /* When a match starts, remove setup clutter and put play controls + box first. */
+  #game.mobile-playing header,
+  #game.mobile-playing .setup,
+  #game.mobile-playing .strip{display:none!important}
+  #game.mobile-playing .controls{margin:2px 0 7px;position:relative;z-index:2}
+  #game.mobile-playing #new:disabled{display:none!important}
+  #game.mobile-playing .controls #next:not([hidden]){grid-column:1/-1}
+  #game.mobile-playing #playArea{scroll-margin-top:6px}
+
+  /* Board slightly tighter so the complete play box fits comfortably on a phone. */
+  #game.mobile-playing .board{padding:6px;border-width:4px;border-radius:15px}
+  #game.mobile-playing .felt{padding:7px 4px}
+  #game.mobile-playing .tiles{padding:3px 0 7px}
+  #game.mobile-playing .arena{height:138px;border-radius:12px}
+  #game.mobile-playing .ai,#game.mobile-playing .message{font-size:.78rem;min-height:22px;margin-top:3px}
+  #game.mobile-playing .cards>div{padding:5px 2px}
+  #game.mobile-playing .cards strong{font-size:1.12rem}
+
+  /* Dice switch deliberately moves below the box on mobile; player scrolls only when needed. */
+  #diceSwitch{margin-top:8px}
+
+  /* Settled dice are true squares, regardless of the 3D travel animation. */
+  .cubeWrap{width:56px!important;height:56px!important;min-width:56px!important;max-width:56px!important;flex-basis:56px!important;aspect-ratio:1/1!important}
+  .flatDie{width:56px!important;height:56px!important;min-width:56px!important;max-width:56px!important;aspect-ratio:1/1!important;border-radius:11px}
+}
+
+@media(max-width:390px){
+  .cubeWrap{width:50px!important;height:50px!important;min-width:50px!important;max-width:50px!important;flex-basis:50px!important}
+  .flatDie{width:50px!important;height:50px!important;min-width:50px!important;max-width:50px!important;border-radius:10px}
+  #game.mobile-playing .arena{height:126px}
+}
+
+
+/* =========================================================
+   Limato Box Challenge v0.3.3 — Full Language UI + desktop Help
+   ========================================================= */
+.helpFab{display:flex!important;align-items:center;justify-content:center}
+@media(min-width:651px){
+  .helpFab{
+    top:18px!important;right:18px!important;bottom:auto!important;
+    width:52px!important;height:52px!important;
+  }
+}
+
+
+/* =========================================================
+   Limato Box Challenge v0.3.4 — Global Edition / RTL support
+   ========================================================= */
+html[dir="rtl"] body{text-align:right}
+html[dir="rtl"] .helpCard{text-align:right!important}
+html[dir="rtl"] .helpCard h2{text-align:center}
+html[dir="rtl"] .tiles,
+html[dir="rtl"] .dice{direction:ltr}
+html[dir="rtl"] input{text-align:right}
+
+
+/* =========================================================
+   LiMATO standalone branding v0.4.0
+   ========================================================= */
+:root{--gold:#d6aa54;--text:#f8f3e8;--muted:#c9bfd4;--limato:#24701f;--limato-bright:#74a638}
+body{
+  background:
+    radial-gradient(circle at 16% 0%,#4a256b 0,#29153c 26%,transparent 47%),
+    radial-gradient(circle at 85% 22%,#31551f44 0,transparent 28%),
+    linear-gradient(180deg,#1b0d2a 0,#0d0913 72%);
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;
+  background:url("limato-logo.png") center 18%/min(62vw,720px) auto no-repeat;
+  opacity:.035;filter:saturate(.9);
+}
+.brandWrap{display:flex;align-items:center;gap:12px}.brandLogo{width:86px;height:70px;object-fit:contain;filter:drop-shadow(0 8px 18px #0008)}
+header h1{letter-spacing:.02em}.watermark{font-size:0!important;background:url("limato-logo.png") center/42% auto no-repeat!important;opacity:.055!important}
+.board{border-color:#4c2b12;background:linear-gradient(145deg,#7f5429,#b27b39 45%,#4e2c14)}
+.tile{background:linear-gradient(90deg,#c7904d,#e2b46e 50%,#b77738)}
+.helpFab{background:linear-gradient(#8b51ca,#5d268f);border-color:#d6aa54}
+.rules{box-shadow:inset 4px 0 0 #396f2b55}
+@media(max-width:650px){
+  .brandLogo{width:58px;height:48px}
+  header h1{font-size:1.42rem}
+  header p{font-size:.82rem}
+  #game:not(.mobile-playing) .board{margin-top:2px}
+}
