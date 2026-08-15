@@ -202,3 +202,72 @@ header h1{letter-spacing:.02em}.watermark{font-size:0!important;background:url("
   header p{font-size:.82rem}
   #game:not(.mobile-playing) .board{margin-top:2px}
 }
+
+/* =========================================================
+   LiMATO Box Challenge v0.5.0 — iPhone safe area + Public Beta extras
+   ========================================================= */
+body{
+  padding-top:max(14px,env(safe-area-inset-top));
+  padding-right:max(14px,env(safe-area-inset-right));
+  padding-bottom:max(14px,env(safe-area-inset-bottom));
+  padding-left:max(14px,env(safe-area-inset-left));
+}
+#game.mobile-playing .controls{
+  scroll-margin-top:calc(env(safe-area-inset-top) + 72px);
+}
+@media(max-width:650px){
+  body{
+    padding-top:max(9px,env(safe-area-inset-top));
+    padding-right:max(9px,env(safe-area-inset-right));
+    padding-bottom:max(9px,env(safe-area-inset-bottom));
+    padding-left:max(9px,env(safe-area-inset-left));
+  }
+  #game.mobile-playing .controls{margin-top:4px!important}
+}
+
+/* Online Challenge room */
+.lbcExtras{margin:10px 0 12px}
+.lbcModeRow{display:grid;grid-template-columns:minmax(150px,260px) 1fr;gap:10px;align-items:end}
+.lbcModeRow label{display:flex;flex-direction:column;gap:6px;color:var(--muted);font-weight:700}
+.onlinePanel{margin-top:10px;padding:12px 14px;border:1px solid #65458a;border-radius:14px;background:#171020}
+.onlinePanel[hidden]{display:none!important}
+.onlineTop{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.onlineTop input{min-width:130px;flex:1}
+.onlineTop button{white-space:nowrap}
+.onlineHint,.onlineStatus{margin:8px 0 0;color:var(--muted);font-size:.92rem}
+.onlineStatus.ok{color:#a9dc82}.onlineStatus.warn{color:#ffd86a}.onlineStatus.bad{color:#ff9d9d}
+.roomCodeBadge{display:inline-flex;align-items:center;gap:7px;border:1px solid #8c68b3;border-radius:999px;padding:7px 11px;background:#251735;color:#ffd86a;font-weight:900;letter-spacing:.08em}
+#onlineLeaderboard{margin-top:16px;border-top:1px solid #65458a;padding-top:12px}
+#onlineLeaderboard h3{margin:0 0 9px;color:var(--gold);font-size:1rem}
+.onlinePlayer{display:grid;grid-template-columns:1fr auto;gap:8px;padding:8px 9px;margin:6px 0;border-radius:10px;background:#241732}
+.onlinePlayer.me{outline:1px solid #74a638}
+.onlinePlayer small{color:var(--muted)}
+.onlinePlayer b{color:#ffd86a}
+
+/* Privacy / anonymous analytics consent */
+.consentBar{position:fixed;left:max(10px,env(safe-area-inset-left));right:max(10px,env(safe-area-inset-right));bottom:max(10px,env(safe-area-inset-bottom));z-index:45;background:#21142ef5;border:1px solid #8c68b3;border-radius:16px;padding:13px;box-shadow:0 16px 40px #000a;max-width:760px;margin:auto}
+.consentBar p{margin:0 0 10px;line-height:1.35;color:#eee5f4}
+.consentActions{display:flex;gap:8px;flex-wrap:wrap}.consentActions button{flex:1;min-width:130px}
+
+/* Rating */
+.ratingOverlay{position:fixed;inset:0;z-index:50;background:#090510dd;display:grid;place-items:center;padding:16px}
+.ratingCard{width:min(94vw,440px);background:#21142e;border:2px solid var(--gold);border-radius:22px;padding:22px;text-align:center;box-shadow:0 22px 55px #000b}
+.ratingCard h2{margin:0 0 8px;color:var(--gold)}
+.ratingCard p{color:var(--muted)}
+.stars{display:flex;justify-content:center;gap:6px;margin:14px 0 18px;direction:ltr}
+.starBtn{border:0;background:transparent;padding:4px;font-size:2.55rem;line-height:1;color:#6f5f7f;text-shadow:0 2px 6px #0008}
+.starBtn:hover,.starBtn.active{color:#ffd24c;transform:scale(1.08)}
+.ratingLater{background:transparent;border-color:#6e527f;color:#ddd3e4}
+
+@media(max-width:650px){
+  .lbcModeRow{grid-template-columns:1fr 1fr}
+  .onlinePanel{padding:10px}
+  .onlineTop{display:grid;grid-template-columns:1fr 1fr}
+  .onlineTop input{grid-column:1/-1;width:100%}
+  .onlineTop .roomCodeBadge{grid-column:1/-1;justify-content:center}
+  .consentBar{font-size:.86rem}
+  .ratingCard{padding:18px 12px}.starBtn{font-size:2.25rem}
+}
+@media(min-width:1051px){
+  .setup{grid-template-columns:repeat(7,minmax(120px,1fr))}
+}

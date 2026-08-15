@@ -1,24 +1,21 @@
-# Limato Box Challenge v0.4.0 — Standalone Global Edition
+# LiMATO Box Challenge v0.5.0 — Public Beta
 
 **Numbers. Logic. Strategy. A touch of luck.**
 
-Limato Box Challenge is a multilingual number, logic and strategy game designed for quick play on phones and computers.
+Public Beta package prepared for GitHub Pages.
 
-## Features
-- 24 interface languages
-- Classic 1–9, Extended 1–12, Pro 1–15 and Master 1–18
-- 3 / 5 / 7 round matches
-- animated dice and square settled dice
-- AI personality comments
-- Help / instructions in all 24 languages
-- mobile-first play layout
-- local personal-best score
-- LiMATO botanical branding and standalone app icon
+## New in v0.5.0
+- iPhone safe-area correction: game controls stay below the iOS status area
+- optional Online Challenge rooms: several players can play at the same time, each on their own device
+- room code + shareable invite link
+- live online leaderboard
+- anonymous opt-in analytics: visits, players who start, completed matches, 30-day returners
+- traffic source tracking via `utm_source` (Facebook, X, Instagram, TikTok, etc.)
+- 5-star rating prompt after several completed games
+- existing 24 languages, game modes, dice animation, Help system and LiMATO branding preserved
 
-## How to play
-Roll the dice and close one or more open numbers whose sum matches the dice total. Each number can be used only once. When no valid combination remains, the round ends. Lower score is better.
+## Important
+The core solo game works immediately on GitHub Pages.
+Online rooms, shared statistics and star ratings require the one-time Supabase setup described in `SETUP-SUPABASE-SLO.md`.
 
-## GitHub Pages
-This repository is ready for static deployment with GitHub Pages.
-
-Suggested repository name: `limato-box-challenge`
+Never put a Supabase Secret / service_role key in GitHub. Only the public **Publishable key** belongs in `supabase-config.js`.
