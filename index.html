@@ -4,20 +4,21 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#241238">
-  <meta name="description" content="Limato Box Challenge — številke, logika, strategija in kanček sreče. Brezplačno preizkusi globalno različico igre.">
+  <meta name="description" content="LiMATO Box Challenge — številke, logika, strategija in kanček sreče. Preizkusi Solo, Invite Room ali novo LiMATO Areno.">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Limato Box">
+  <meta name="apple-mobile-web-app-title" content="LiMATO Box">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Limato Box Challenge">
-  <meta property="og:description" content="Številke. Logika. Strategija. Kanček sreče. Preizkusi Limato Box Challenge.">
+  <meta property="og:title" content="LiMATO Box Challenge">
+  <meta property="og:description" content="Številke. Logika. Strategija. Kanček sreče. LiMATO Arena je odprta.">
   <meta property="og:image" content="https://tomolipovsek-prog.github.io/limato-box-challenge/app-icon.png">
   <meta property="og:url" content="https://tomolipovsek-prog.github.io/limato-box-challenge/">
-  <title>Limato Box Challenge v0.5.0</title>
+  <title>LiMATO Box Challenge v0.6.0</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-192.png">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=060">
+  <link rel="stylesheet" href="arena-v060.css?v=060">
 </head>
 <body>
 <main class="app">
@@ -27,10 +28,11 @@
         <img src="limato-logo.png" alt="LiMATO" class="brandLogo">
         <div>
           <h1>LIMATO BOX CHALLENGE</h1>
-          <p>Public Beta v0.5.0</p>
+          <p>Arena Beta v0.6.0</p>
         </div>
       </div>
     </header>
+
     <section class="setup">
       <label><span data-t="language">Jezik</span>
         <select id="lang">
@@ -43,22 +45,82 @@
       <label><span data-t="persona">AI osebnost</span><select id="persona"><option value="friend" data-t="friend">🙂 Prijazen</option><option value="professor" data-t="professor">🤓 Profesor</option><option value="provoker" data-t="provoker">😈 Provokator</option><option value="comic" data-t="comic">😂 Komik</option><option value="silent" data-t="silent">🤫 Tiho</option></select></label>
       <button id="start" class="primary" data-t="start">ZAČNI TEKMO</button>
     </section>
+
     <div id="extrasMount"></div>
-    <section class="strip"><span><b data-t="player">Igralec</b>: <i id="player">–</i></span><span><b data-t="round">Runda</b>: <i id="round">–</i></span><span><b data-t="dice">Kocke</b>: <i id="diceCount">–</i></span><span><b data-t="penalty">Pribitek</b>: <i id="penalty">0</i></span><span><b data-t="total">Skupaj</b>: <i id="total">0</i></span></section>
-    <section class="controls"><button id="roll" class="primary" disabled data-t="roll">VRZI KOCKE</button><button id="close" disabled data-t="close">ZAPRI IZBRANE ŠTEVILKE</button><button id="next" class="primary" hidden data-t="next">NASLEDNJA RUNDA</button><button id="new" class="danger" disabled data-t="new">NOVA TEKMA</button></section>
-    <section class="switch" id="diceSwitch"><div><b data-t="switch">Menjava kock</b><p>+2 • +3 • +4</p></div><div><select id="diceChoice" disabled><option value="1">1 🎲</option><option value="2">2 🎲</option><option value="3">3 🎲</option><option value="4">4 🎲</option></select><button id="change" disabled data-t="change">ZAMENJAJ</button></div></section>
-    <section class="layout" id="playArea">
-      <section class="board"><div class="watermark" aria-hidden="true"></div><div class="felt"><div id="tiles" class="tiles"></div><div class="arena"><div id="dice" class="dice"></div></div><div id="ai" class="ai">🤖</div><div id="message" class="message"></div><div class="cards"><div><span data-t="target">Ciljna vsota</span><strong id="target">–</strong></div><div><span data-t="selected">Izbrane številke</span><strong id="selected">0</strong></div><div><span data-t="score">Rezultat runde</span><strong id="score">0</strong></div></div></div></section>
-      <aside><h2 data-t="results">Rezultati</h2><div id="results"></div><div class="sum"><span data-t="total">Skupaj</span><b id="sum">0</b></div><div class="sum"><span data-t="best">Osebni rekord</span><b id="best">–</b></div><div id="onlineLeaderboard" hidden></div></aside>
+
+    <section class="strip">
+      <span><b data-t="player">Igralec</b>: <i id="player">–</i></span>
+      <span><b data-t="round">Runda</b>: <i id="round">–</i></span>
+      <span><b data-t="dice">Kocke</b>: <i id="diceCount">–</i></span>
+      <span><b data-t="penalty">Pribitek</b>: <i id="penalty">0</i></span>
+      <span><b data-t="total">Skupaj</b>: <i id="total">0</i></span>
     </section>
+
+    <section class="controls">
+      <button id="roll" class="primary" disabled data-t="roll">VRZI KOCKE</button>
+      <button id="close" disabled data-t="close">ZAPRI IZBRANE ŠTEVILKE</button>
+      <button id="next" class="primary" hidden data-t="next">NASLEDNJA RUNDA</button>
+      <button id="new" class="danger" disabled data-t="new">NOVA TEKMA</button>
+    </section>
+
+    <section class="switch" id="diceSwitch">
+      <div><b data-t="switch">Menjava kock</b><p>+2 • +3 • +4</p></div>
+      <div>
+        <select id="diceChoice" disabled><option value="1">1 🎲</option><option value="2">2 🎲</option><option value="3">3 🎲</option><option value="4">4 🎲</option></select>
+        <button id="change" disabled data-t="change">ZAMENJAJ</button>
+      </div>
+    </section>
+
+    <section class="layout" id="playArea">
+      <section class="board">
+        <div class="watermark" aria-hidden="true"></div>
+        <div class="felt">
+          <div id="tiles" class="tiles"></div>
+          <div class="arena"><div id="dice" class="dice"></div></div>
+          <div id="ai" class="ai">🤖</div>
+          <div id="message" class="message"></div>
+          <div class="cards">
+            <div><span data-t="target">Ciljna vsota</span><strong id="target">–</strong></div>
+            <div><span data-t="selected">Izbrane številke</span><strong id="selected">0</strong></div>
+            <div><span data-t="score">Rezultat runde</span><strong id="score">0</strong></div>
+          </div>
+        </div>
+      </section>
+      <aside>
+        <h2 data-t="results">Rezultati</h2>
+        <div id="results"></div>
+        <div class="sum"><span data-t="total">Skupaj</span><b id="sum">0</b></div>
+        <div class="sum"><span data-t="best">Osebni rekord</span><b id="best">–</b></div>
+        <div id="onlineLeaderboard" hidden></div>
+      </aside>
+    </section>
+
     <p class="rules" data-t="rules">Po metu izberi odprte številke, katerih vsota je enaka metu. Vsako številko lahko uporabiš samo enkrat. Nižji rezultat je boljši.</p>
   </section>
+
   <button id="help" class="helpFab" type="button" aria-label="Navodila" title="Navodila">?</button>
-  <div id="helpOverlay" class="overlay helpOverlay" hidden><div class="helpCard"><button id="helpClose" class="helpClose" type="button" aria-label="Close">×</button><h2 id="helpTitle">NAVODILA</h2><div id="helpBody"></div><button id="helpOk" class="primary">OK</button></div></div>
-  <div id="celebrate" class="overlay" hidden><div><div class="trophy">🏆</div><h2 id="celebrateTitle">PERFECT GAME</h2><p id="celebrateText"></p><button id="ok" class="primary">OK</button></div></div>
+  <div id="helpOverlay" class="overlay helpOverlay" hidden>
+    <div class="helpCard">
+      <button id="helpClose" class="helpClose" type="button" aria-label="Close">×</button>
+      <h2 id="helpTitle">NAVODILA</h2>
+      <div id="helpBody"></div>
+      <button id="helpOk" class="primary">OK</button>
+    </div>
+  </div>
+  <div id="celebrate" class="overlay" hidden>
+    <div>
+      <div class="trophy">🏆</div>
+      <h2 id="celebrateTitle">PERFECT GAME</h2>
+      <p id="celebrateText"></p>
+      <button id="ok" class="primary">OK</button>
+    </div>
+  </div>
 </main>
-<script src="script.js"></script>
-<script src="supabase-config.js"></script>
-<script type="module" src="backend.js"></script>
+
+<script src="script.js?v=060"></script>
+<script src="supabase-config.js?v=060"></script>
+<script type="module" src="backend.js?v=060"></script>
+<script type="module" src="arena-db-v060.js?v=060"></script>
+<script src="arena-v060.js?v=060"></script>
 </body>
 </html>

@@ -1,0 +1,272 @@
+/* LiMATO Box Challenge v0.6.0 — Arena additive layer.
+   Existing v0.5.0 styling remains untouched. */
+
+:root{
+  --lbc-v060-gold:#f0c55a;
+  --lbc-v060-purple:#8f48d8;
+  --lbc-v060-panel:#160d22;
+  --lbc-v060-panel2:#241234;
+  --lbc-v060-green:#6fbd45;
+  --lbc-v060-red:#96313e;
+  --lbc-v060-line:#75469a;
+}
+
+.v060-nameHint{
+  display:block;
+  margin-top:5px;
+  font-size:.78rem;
+  font-weight:700;
+  color:#cbbbd7;
+}
+.v060-nameHint.ok{color:#8fe06f}
+.v060-nameHint.warn{color:#ffd46f}
+
+#arenaPanel{
+  margin:12px 0;
+  border:1px solid var(--lbc-v060-line);
+  background:linear-gradient(145deg,#1e102c,#120a1d);
+  border-radius:16px;
+  padding:14px;
+}
+#arenaPanel[hidden]{display:none!important}
+.v060-arenaHead{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.v060-arenaTitle{
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+}
+.v060-arenaTitle b{
+  color:var(--lbc-v060-gold);
+  font-size:1.15rem;
+}
+.v060-arenaTitle small{color:#cbbbd7}
+.v060-arenaControls{
+  display:flex;
+  align-items:flex-end;
+  gap:9px;
+  flex-wrap:wrap;
+}
+.v060-arenaControls label{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  color:#cbbbd7;
+  font-weight:700;
+}
+.v060-arenaControls select{min-width:110px}
+.v060-arenaStatus{
+  min-height:24px;
+  margin:10px 0 0;
+  color:#d9ccdf;
+  font-weight:700;
+}
+.v060-arenaStatus.ok{color:#8fe06f}
+.v060-arenaStatus.warn{color:#ffd46f}
+.v060-arenaStatus.bad{color:#ff9494}
+
+#arenaMatch{
+  margin-top:12px;
+  border-top:1px solid #5f397d;
+  padding-top:12px;
+}
+#arenaMatch[hidden]{display:none!important}
+.v060-turnbar{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:10px;
+  align-items:center;
+  border:1px solid #714697;
+  background:#21122f;
+  border-radius:14px;
+  padding:11px 13px;
+}
+.v060-turnwho strong{color:var(--lbc-v060-gold)}
+.v060-timer{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  font-weight:900;
+  font-size:1.2rem;
+}
+.v060-timer b{
+  min-width:64px;
+  text-align:center;
+  border:2px solid #9d5add;
+  border-radius:12px;
+  padding:7px 9px;
+  background:#140a20;
+  color:#fff;
+}
+.v060-timer.urgent b{
+  border-color:#e85868;
+  color:#ff9a9a;
+  animation:v060Pulse .7s infinite alternate;
+}
+@keyframes v060Pulse{to{transform:scale(1.05)}}
+
+.v060-playerGrid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(135px,1fr));
+  gap:7px;
+  margin:10px 0;
+}
+.v060-player{
+  border:1px solid #624181;
+  border-radius:11px;
+  padding:8px 10px;
+  background:#1a1025;
+}
+.v060-player.me{outline:2px solid #7eba59}
+.v060-player.current{outline:2px solid #d8ad4e}
+.v060-player span{display:block;font-weight:800}
+.v060-player small{color:#c9bcd1}
+
+.v060-watch{
+  border:1px solid #624181;
+  border-radius:14px;
+  padding:12px;
+  background:radial-gradient(circle at center,#29153d,#140b20);
+}
+.v060-watch h3{
+  margin:0 0 9px;
+  color:var(--lbc-v060-gold);
+}
+.v060-watchTiles{
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+  min-height:38px;
+}
+.v060-watchTile{
+  min-width:32px;
+  padding:6px;
+  text-align:center;
+  border-radius:7px;
+  background:linear-gradient(90deg,#c38a40,#e0b163);
+  color:#221409;
+  font-weight:900;
+}
+.v060-watchTile.closed{
+  opacity:.22;
+  transform:scaleY(.7);
+}
+.v060-watchMeta{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-top:8px;
+  color:#e4d9e8;
+}
+.v060-watchMeta b{color:#ffd66d}
+
+.v060-community{
+  margin:12px 0 0;
+  border:1px solid #5f397d;
+  border-radius:14px;
+  padding:12px;
+  background:#171020;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.v060-community p{margin:0;color:#cbbbd7}
+.v060-community b{color:#f0c55a}
+
+.v060-overlay{
+  position:fixed;
+  z-index:99990;
+  inset:0;
+  display:grid;
+  place-items:center;
+  padding:16px;
+  background:#09060dcc;
+  backdrop-filter:blur(6px);
+}
+.v060-overlay[hidden]{display:none!important}
+.v060-modal{
+  width:min(540px,100%);
+  max-height:90vh;
+  overflow:auto;
+  border:1px solid #8f55bd;
+  border-radius:20px;
+  background:linear-gradient(155deg,#2b173d,#12091d);
+  box-shadow:0 24px 70px #000b;
+  padding:20px;
+}
+.v060-modal h2{color:#f0c55a;margin:0 0 7px}
+.v060-modal p{color:#d7c9dc;line-height:1.45}
+.v060-form{
+  display:grid;
+  gap:10px;
+}
+.v060-form label{
+  display:grid;
+  gap:5px;
+  color:#d7c9dc;
+  font-weight:800;
+}
+.v060-form input,.v060-form select,.v060-form textarea{
+  width:100%;
+  border:1px solid #8c68b3;
+  background:#21142f;
+  color:#fff;
+  border-radius:12px;
+  padding:12px;
+  font:inherit;
+}
+.v060-form textarea{min-height:90px;resize:vertical}
+.v060-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:10px;
+}
+.v060-msg{
+  min-height:24px;
+  margin-top:8px;
+  font-weight:800;
+}
+.v060-msg.ok{color:#8fe06f}
+.v060-msg.warn{color:#ffd46f}
+.v060-msg.bad{color:#ff9494}
+.v060-card{
+  border:1px solid #8160a5;
+  background:#1b1027;
+  border-radius:13px;
+  padding:11px;
+}
+.v060-yellow{
+  border-color:#c89a29;
+  background:#30220d;
+  color:#ffe08a;
+}
+.v060-red{
+  border-color:#a83b48;
+  background:#351018;
+  color:#ffb1ba;
+}
+.v060-count{font-variant-numeric:tabular-nums}
+
+@media(max-width:650px){
+  #arenaPanel{padding:11px}
+  .v060-arenaControls{display:grid;grid-template-columns:1fr 1fr;width:100%}
+  .v060-arenaControls label{grid-column:1/-1}
+  .v060-arenaControls button{width:100%}
+  .v060-turnbar{grid-template-columns:1fr}
+  .v060-timer{justify-content:space-between}
+  .v060-community button{width:100%}
+  .v060-modal{padding:16px}
+}
+
+/* iPhone safe area: keep the first controls below the status / Dynamic Island area. */
+@supports(padding:max(0px)){
+  body{padding-top:max(14px,env(safe-area-inset-top))}
+}

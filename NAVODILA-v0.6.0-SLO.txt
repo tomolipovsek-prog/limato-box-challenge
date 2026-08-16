@@ -1,0 +1,207 @@
+LiMATO BOX CHALLENGE v0.6.0 — ARENA BETA
+================================================
+
+POMEMBNO
+--------
+Ta paket NE briše v0.5.0.
+Stari:
+- Solo način
+- Online soba s kodo / linkom
+- Supabase statistika
+- ocene
+ostanejo v repozitoriju in delujejo naprej.
+
+NOVO V v0.6.0
+--------------
+1. Obvezen vzdevek (2–24 znakov)
+2. Vzdevek se zapomni na napravi
+3. 7 NOVIH dokončanih tekem po nadgradnji kot preizkus
+   - stare razvojne/testne tekme se ne štejejo
+4. Po 7 novih tekmah se odpre LiMATO Player registracija
+5. E-mail + 6-mestna potrditvena koda; brez gesla
+6. Stara Online soba ostane kot »Online soba – povabi«
+7. Nova »Arena – samodejno«
+8. Izbira 2 / 3 / 4 / 5 / 6 igralcev
+9. Samodejno združevanje po:
+   - istem Boxu
+   - istem številu rund
+   - istem številu igralcev
+10. Igralci so naključno razporejeni po sedežih
+11. Čas na rundo:
+    Classic 1–9   = 20 s
+    Extended 1–12 = 25 s
+    Pro 1–15      = 30 s
+    Master 1–18   = 45 s
+12. Če čas poteče:
+    - šteje trenutno odprta vsota + pribitki
+    - Arena gre naprej
+    - tudi če je aktivni igralec odložil telefon, lahko drugi klient po roku sproži timeout
+13. Ostali spremljajo v živo:
+    - odprte številke
+    - zadnje kocke
+    - ciljno vsoto
+    - trenutni rezultat
+14. V Areni provokator/komentator pripada NASPROTNIKU:
+    - aktivni igralec prejema komentar enega izmed nasprotnikovih izbranih komentatorjev
+15. Več novih udarnih komentarjev
+16. Community Voice:
+    - igralec predlaga lasten komentar
+    - 3–75 znakov
+    - vsi predlogi najprej dobijo status PENDING
+    - v globalno zbirko pridejo šele po odobritvi
+17. Prva lokalna moderacija:
+    - grožnja/groba žalitev/opolzkost se NE pošlje v bazo
+    - prvi prekršek = rumeni karton
+    - drugi = 24 h brez dodajanja komentarjev
+    - igranje ostane omogočeno
+18. Osnova za turnirje 4/8/16/32/64/128 je pripravljena v bazi
+19. EUR / PI sta samo PODATKOVNA PLACEHOLDERJA. Plačevanje NI vključeno.
+
+KORAK A — SUPABASE (najprej)
+----------------------------
+1. Odpri Supabase > LiMATO Box Challenge.
+2. Klikni SQL Editor.
+3. Odpri datoteko:
+   supabase-v060-migration.sql
+4. Kopiraj CELOTNO vsebino v SQL Editor.
+5. Klikni zeleni RUN.
+6. Pravilen rezultat je brez rdeče napake; pri DDL je običajno »Success. No rows returned.«
+
+KORAK B — MANUAL LINKING ZA REGISTRACIJO
+-----------------------------------------
+Supabase:
+Authentication > Sign In / Providers
+
+Vključi:
+ALLOW MANUAL LINKING = ON
+
+Anonymous sign-ins naj ostane ON.
+
+Zakaj:
+v0.6.0 najprej ustvari anonimnega igralca, po 7 tekmah pa se ISTI račun poveže z e-pošto.
+
+KORAK C — 6-MESTNA KODA V E-POŠTI
+----------------------------------
+Supabase > Authentication > Email Templates.
+
+Pri predlogi za CHANGE EMAIL ADDRESS mora sporočilo vsebovati Supabase token
+(6-mestno kodo), ne samo povezave.
+
+Za test lahko v predlogo vključiš:
+{{ .Token }}
+
+Primer besedila:
+»Tvoja LiMATO potrditvena koda je: {{ .Token }}«
+
+Če dobiš samo potrditveno povezavo, lahko tudi klikneš povezavo; aplikacija ob ponovnem
+vstopu preveri, ali račun ni več anonimen.
+
+PRED VEČJO JAVNO KAMPANJO:
+uredi lasten SMTP pošiljatelj. Vgrajena Supabase e-pošta je primerna predvsem za testiranje
+in ima omejitve.
+
+KORAK D — GITHUB
+-----------------
+V repozitoriju:
+tomolipovsek-prog / limato-box-challenge
+
+naloži 5 datotek iz tega paketa:
+- index.html                      (REPLACE / prepiši obstoječo)
+- arena-v060.css                  (NEW)
+- arena-db-v060.js                (NEW)
+- arena-v060.js                   (NEW)
+- supabase-v060-migration.sql     (NEW)
+
+NE BRIŠI:
+- script.js
+- backend.js
+- style.css
+- supabase-config.js
+- supabase-setup.sql
+- slik/logotipov/ikon
+- manifest.webmanifest
+- README in ostalih obstoječih datotek
+
+Predlog Commit changes:
+LiMATO Box Challenge v0.6.0 - Arena Beta
+
+KORAK E — POČAKAJ GITHUB PAGES
+-------------------------------
+Po commitu počakaj približno 1–3 minute.
+Nato odpri:
+https://tomolipovsek-prog.github.io/limato-box-challenge/
+
+Če telefon kaže staro verzijo:
+- osveži stran
+- po potrebi zapri bližnjico/PWA in jo ponovno odpri
+- različica na vrhu mora pisati:
+  Arena Beta v0.6.0
+
+PRVI TEST
+---------
+TEST 1 — nickname:
+- izbriši Igralno ime
+- ZAČNI TEKMO ne sme začeti igre
+- vpiši Tomaž
+- oznaka igralca se mora takoj spremeniti v Tomaž
+
+TEST 2 — stara soba:
+- izberi »Online soba – povabi«
+- stari sistem kod/linkov mora ostati
+
+TEST 3 — Arena:
+- oba telefona:
+  enak Box, enake runde, 2 igralca
+- izberi »Arena – samodejno«
+- na obeh klikni IGRAJ ONLINE
+- sistem ju mora združiti
+- en je na potezi, drugi vidi njegov potek
+- nato se vlogi zamenjata
+
+TEST 4 — timer:
+- Classic: pusti aktivnega igralca pri miru
+- pri 00:00 mora sistem upoštevati odprte številke in nadaljevati z naslednjim igralcem
+
+TEST 5 — Community Voice:
+- normalen komentar: mora iti v PENDING
+- grob komentar: ne sme biti poslan; pokaže se rumeni karton
+- PENDING komentar po želji odobriš v Supabase Table Editor:
+  lbc_community_comments > status = approved
+
+REGISTRACIJSKI TEST BREZ 7 IGER
+-------------------------------
+Za test lahko v brskalniku odpreš Developer Tools > Console in začasno nastaviš:
+localStorage.setItem('lbc-v060-trial-baseline', String((+localStorage.getItem('lbc-completed-games')||0)-7));
+location.reload();
+
+S tem samo na tej napravi simuliraš 7 dokončanih v0.6 tekem.
+Ko test končaš, lahko baseline izbrišeš:
+localStorage.removeItem('lbc-v060-trial-baseline');
+location.reload();
+
+VARNOST
+-------
+V GitHub NIKOLI ne vstavljaj:
+- Database password
+- Secret key
+- service_role key
+
+V supabase-config.js ostaneta samo:
+- Project URL
+- PUBLISHABLE key
+
+Community komentarji so v v0.6.0 namenoma »pending«.
+Lokalni filter je samo PRVI filter, ni nezmotljiva AI moderacija.
+Pred avtomatsko globalno objavo komentarjev bomo kasneje dodali strežniško/AI moderacijo.
+
+PLAČEVANJE
+----------
+V0.6.0 NE obdeluje denarja in NE obdeluje Pi plačil.
+Baza samo že pozna možne oznake free / eur / pi za kasnejšo nadgradnjo.
+
+TURNIRJI
+--------
+Tabele so pripravljene, UI pa je namenoma skrit, dokler Arena ni stabilno stestirana.
+
+LiMATO Games — Arena Beta v0.6.0
+Numbers. Logic. Strategy. A touch of luck.
