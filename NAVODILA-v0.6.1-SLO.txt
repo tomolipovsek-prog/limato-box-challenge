@@ -1,0 +1,108 @@
+LiMATO BOX CHALLENGE — NAVODILA v0.6.1
+Arena Beta — Turn & Timer Update
+
+1. CILJ IGRE
+Zapri čim več številk. Ko runde ni več mogoče nadaljevati, rezultat tvorijo
+preostale odprte številke + morebitni pribitki. Nižji skupni rezultat je boljši.
+Če zapreš vse številke, je rezultat runde 0 — LEGENDARY PERFECT GAME.
+
+2. BOX NAČINI
+Classic 1–9      ★★
+Extended 1–12    ★★★
+Pro 1–15         ★★★★
+Master 1–18      ★★★★★
+
+3. OSNOVNA POTEZA
+Vrzi kocke.
+Izberi eno ali več odprtih številk, katerih vsota je enaka vsoti kock.
+Vsako številko lahko uporabiš samo enkrat.
+Ko je vsota pravilna, potrdi ZAPRI IZBRANE ŠTEVILKE in nadaljuj z naslednjim metom.
+Runda se konča, ko ni več mogoče sestaviti vsote meta ali ko so vse številke zaprte.
+
+4. MENJAVA KOCK
+Pred metom lahko spremeniš število kock.
+Prva menjava doda +2 točki, druga +3, tretja +4.
+Po tretji menjavi dodatna menjava ni več mogoča.
+Pribitki se prištejejo rezultatu runde.
+
+5. SAMOSTOJNA IGRA
+Igralec izbere Box, 3/5/7 rund in AI osebnost.
+AI komentator je pomočnik/provokator med igranjem.
+Za začetek je potreben vzdevek oziroma igralno ime.
+
+6. ONLINE SOBA — POVABI
+Obstoječi način z ustvarjanjem/povabilom v sobo ostane na voljo.
+Ta način je ločen od samodejne Arene.
+
+7. LiMATO ARENA — SAMODEJNO POVEZOVANJE
+Arena samodejno poveže igralce, ki izberejo:
+- isti Box,
+- isto število rund,
+- isto število igralcev (2, 3, 4, 5 ali 6).
+
+Vrstni red igranja določi vrstni red prijave v čakalno vrsto:
+prvi prijavljeni dobi sedež #1 in začne,
+drugi prijavljeni sedež #2 itd.
+
+Primer za 2 igralca in 3 runde:
+Lipe67 R1 → Strukelli R1 → Lipe67 R2 → Strukelli R2 → Lipe67 R3 → Strukelli R3.
+
+Med potezo enega igralca ostali v živo spremljajo njegov potek.
+
+8. ČAS JE ZA CELO RUNDO IGRALCA
+Čas se NE začne znova pri vsakem metu. Teče skozi celotno igralčevo rundo:
+metanje, razmišljanje, izbira številk in provokacije.
+
+Classic 1–9:    40 sekund
+Extended 1–12:  45 sekund
+Pro 1–15:       50 sekund
+Master 1–18:    60 sekund
+
+Če igralec konča prej, igra takoj preide na naslednjega.
+Če čas poteče, se runda zaključi z zatečenim stanjem:
+preostale odprte številke + pribitki.
+
+9. IZKUŠENOST — MAJHEN ČASOVNI HANDICAP
+Po vsakih 1.000 dokončanih tekmah se igralčev čas zmanjša za 1 sekundo.
+Največje zmanjšanje je 5 sekund.
+
+0–999 tekem: osnovni čas
+1.000–1.999: −1 s
+2.000–2.999: −2 s
+3.000–3.999: −3 s
+4.000–4.999: −4 s
+5.000+ tekem: −5 s
+
+Namen ni kaznovanje, ampak dodaten pritisk za izkušene igralce.
+
+10. AI OSEBNOST / KOMENTATOR
+Na voljo:
+🙂 Prijazen
+🤓 Profesor
+😈 Provokator
+😂 Komik
+🤫 Tiho
+
+V Areni so provokacije namenjene predvsem psihološkemu pritisku med tekmeci.
+
+11. LiMATO COMMUNITY VOICE
+Igralec lahko predlaga svoj komentar/provokacijo do 75 znakov.
+Predlog gre najprej v pregled.
+Duhovite provokacije so dobrodošle.
+Grožnje, grobe žaljivke, opolzkost in podobna vsebina niso sprejeti.
+
+12. BREZPLAČNI PREIZKUS IN RAČUN
+Novi igralec ima 7 dokončanih tekem brez trajne registracije.
+Po tem sistem ponudi LiMATO Player račun z e-pošto in potrditveno kodo.
+Plačilni sistem in Pi igranje še nista aktivna v v0.6.1.
+
+13. TURNIRJI
+Temelj za turnirje je v bazi že pripravljen, uporabniški vmesnik pa še ni aktiven.
+
+14. HARD NAČIN — NAČRTOVANO
+Hard način še NI aktiven v v0.6.1.
+Načrt: napačno potrjena vsota/izbira bo kaznovana, da bo potrebna večja natančnost.
+
+VERZIJA
+LiMATO Box Challenge — Arena Beta v0.6.1
+Turn & Timer Update
