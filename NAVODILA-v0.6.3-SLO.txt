@@ -1,0 +1,12 @@
+LiMATO BOX CHALLENGE v0.6.3 — AI CHALLENGE
+
+1. Izberi Način: Samostojno ali 🤖 Proti AI.
+2. Pri Proti AI izberi težavnost: Začetnik, Izzivalec ali Mojster.
+3. Izberi Box in 3/5/7 rund.
+4. Človek odigra rundo po običajnih pravilih.
+5. LiMATO AI nato odigra svojo rundo z istim Boxom.
+6. AI uporablja prave mete kock, veljavne kombinacije in enako točkovanje.
+7. Po vsaki rundi se pokaže primerjava.
+8. Po zadnji rundi zmaga nižji skupni rezultat.
+9. Obstoječa AI osebnost ostane komentator/provokator.
+10. Hard Mode, Arena, Invite Room in ? ostanejo aktivni.

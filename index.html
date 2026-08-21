@@ -43,6 +43,19 @@
 }
 </style>
 
+
+<style id="v063-ai-css">
+.aiChallengeBox{margin:12px 0;padding:12px;border:1px solid rgba(255,215,90,.55);border-radius:14px;background:rgba(34,20,52,.72)}
+.aiChallengeBox[hidden]{display:none!important}
+.aiChallengeGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:8px}
+.aiChallengeGrid label{display:flex;flex-direction:column;gap:5px}
+.aiScoreCard{margin-top:10px;padding:10px;border-radius:12px;background:rgba(0,0,0,.22)}
+.aiScoreRows{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.aiScoreRows>div{padding:8px;border-radius:10px;background:rgba(255,255,255,.06);text-align:center}
+.aiVerdict{font-weight:800;text-align:center;margin-top:9px;font-size:1.05rem}
+@media(max-width:650px){.aiChallengeGrid,.aiScoreRows{grid-template-columns:1fr}.aiChallengeBox{margin:10px 0}}
+</style>
+
 </head>
 <body>
 <main class="app">
@@ -52,7 +65,7 @@
         <img src="limato-logo.png" alt="LiMATO" class="brandLogo">
         <div>
           <h1>LIMATO BOX CHALLENGE</h1>
-          <p>Arena Beta v0.6.2</p>
+          <p>Arena Beta v0.6.3</p>
         </div>
       </div>
     </header>
@@ -139,6 +152,7 @@
 <script type="module" src="arena-db-v060.js?v=062"></script>
 <script src="arena-v060.js?v=062"></script>
 <script src="arena-v061-patch.js?v=062"></script>
-<script src="arena-v062-patch.js?v=062"></script>
+<script src="arena-v062-patch.js?v=063"></script>
+<script src="arena-v063-ai-challenge.js?v=063"></script>
 </body>
 </html>
