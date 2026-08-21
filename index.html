@@ -13,12 +13,36 @@
   <meta property="og:description" content="Številke. Logika. Strategija. Kanček sreče. LiMATO Arena je odprta.">
   <meta property="og:image" content="https://tomolipovsek-prog.github.io/limato-box-challenge/app-icon.png">
   <meta property="og:url" content="https://tomolipovsek-prog.github.io/limato-box-challenge/">
-  <title>LiMATO Box Challenge v0.6.1</title>
+  <title>LiMATO Box Challenge v0.6.2</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-192.png">
-  <link rel="stylesheet" href="style.css?v=061">
-  <link rel="stylesheet" href="arena-v060.css?v=061">
+  <link rel="stylesheet" href="style.css?v=062">
+  <link rel="stylesheet" href="arena-v060.css?v=062">
+
+<style id="v062-mobile-help-fix">
+/* LiMATO Box Challenge v0.6.2 — mobile ? visibility fix */
+.helpFab{
+ position:fixed!important;
+ top:max(12px,env(safe-area-inset-top))!important;
+ right:max(12px,env(safe-area-inset-right))!important;
+ bottom:auto!important;left:auto!important;
+ z-index:2147483000!important;
+ display:flex!important;align-items:center!important;justify-content:center!important;
+ visibility:visible!important;opacity:1!important;
+ width:52px!important;height:52px!important;min-width:52px!important;min-height:52px!important;
+ border-radius:50%!important;pointer-events:auto!important;touch-action:manipulation;
+ -webkit-tap-highlight-color:transparent;
+}
+@media(max-width:650px){
+ .helpFab{
+  top:max(8px,env(safe-area-inset-top))!important;
+  right:max(8px,env(safe-area-inset-right))!important;
+  width:46px!important;height:46px!important;min-width:46px!important;min-height:46px!important;
+ }
+}
+</style>
+
 </head>
 <body>
 <main class="app">
@@ -28,7 +52,7 @@
         <img src="limato-logo.png" alt="LiMATO" class="brandLogo">
         <div>
           <h1>LIMATO BOX CHALLENGE</h1>
-          <p>Arena Beta v0.6.1</p>
+          <p>Arena Beta v0.6.2</p>
         </div>
       </div>
     </header>
@@ -109,11 +133,12 @@
     </div>
   </div>
 </main>
-<script src="script.js?v=061"></script>
-<script src="supabase-config.js?v=061"></script>
-<script type="module" src="backend.js?v=061"></script>
-<script type="module" src="arena-db-v060.js?v=061"></script>
-<script src="arena-v060.js?v=061"></script>
-<script src="arena-v061-patch.js?v=061"></script>
+<script src="script.js?v=062"></script>
+<script src="supabase-config.js?v=062"></script>
+<script type="module" src="backend.js?v=062"></script>
+<script type="module" src="arena-db-v060.js?v=062"></script>
+<script src="arena-v060.js?v=062"></script>
+<script src="arena-v061-patch.js?v=062"></script>
+<script src="arena-v062-patch.js?v=062"></script>
 </body>
 </html>

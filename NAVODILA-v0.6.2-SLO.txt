@@ -1,0 +1,34 @@
+LiMATO BOX CHALLENGE — NAVODILA v0.6.2
+Arena Beta — HARD MODE UPDATE
+
+NOVO V v0.6.2
+1. Nova izbira težavnosti: Normal / 🔥 HARD.
+2. V načinu HARD lahko igralec potrdi tudi napačno vsoto.
+3. Vsaka napačna potrditev doda +2 pribitka.
+4. Pri napačni potrditvi se številke ne zaprejo; igralec popravi izbiro in poskusi znova.
+5. V Areni čas med napačno potrditvijo teče naprej.
+6. Pravila HARD so dodana v pomoč (?) v igri.
+7. Vse iz v0.6.1 ostane: vrstni red po prijavi, čas cele runde 40/45/50/60 s in handicap do -5 s.
+8. Stari Solo, Online soba – povabi, Arena, Community Voice, registracija, statistika in ocene ostanejo.
+9. Plačevanje EUR/PI in turnirski uporabniški vmesnik še nista aktivna.
+
+NAMESTITEV
+1. Za v0.6.2 NI nove Supabase SQL migracije.
+2. Na GitHub naloži/prepiši:
+   - index.html
+   - arena-v062-patch.js
+   - README.md
+   - README-v0.6.2.md
+   - NAVODILA-v0.6.2-SLO.txt
+3. NE BRIŠI obstoječih v0.6.0/v0.6.1 datotek.
+4. Predlog Commit changes:
+   LiMATO Box Challenge v0.6.2 - Hard Mode Update
+5. Počakaj GitHub Pages in naredi osvežitev strani.
+6. Na vrhu mora pisati Arena Beta v0.6.2.
+
+HITRI TEST
+A. Normal: napačne vsote ne moreš potrditi — obnašanje kot prej.
+B. HARD: izberi napačno vsoto in pritisni ZAPRI IZBRANE ŠTEVILKE — pribitek se poveča za +2, številke ostanejo odprte.
+C. HARD: nato izberi pravilno vsoto — poteza se normalno nadaljuje.
+D. Arena: preveri, da timer ob HARD napaki ne obstane.
+E. Preveri Solo in Online sobo – povabi, da ostaneta nespremenjena.
