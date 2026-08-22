@@ -188,6 +188,25 @@ nextRound=function(){
   if(ai.enabled && ai.running){ setMsg("🤖 AI še zaključuje svojo rundo…"); return; }
   oldNext();
 };
-injectUI(); syncMode(); renderAI();
-console.info("LiMATO Box Challenge v0.6.3 AI Challenge FIX-2 loaded");
+// FIX-3: backend.js is loaded as type="module", so #playMode is created
+// asynchronously and may not exist yet when this classic script runs.
+// Wait until the real "Način igre" selector exists, then attach AI exactly once.
+function bootAIChallenge(){
+  let tries=0;
+  const timer=setInterval(()=>{
+    tries++;
+    if($("playMode")){
+      clearInterval(timer);
+      injectUI();
+      syncMode();
+      renderAI();
+      console.info("LiMATO Box Challenge v0.6.3 AI Challenge FIX-3 mounted");
+    }else if(tries>=100){
+      clearInterval(timer);
+      console.warn("LiMATO AI Challenge: #playMode was not created in time.");
+    }
+  },100);
+}
+bootAIChallenge();
+console.info("LiMATO Box Challenge v0.6.3 AI Challenge FIX-3 loaded");
 })();
