@@ -1,0 +1,34 @@
+LiMATO BOX CHALLENGE v0.6.3 — FIX-5
+
+TO JE PRAVI POPRAVEK ŠTEVCA.
+
+1) GLAVNI ČAS RUNDE V IGRI PROTI AI:
+   Classic 1–9   = 40 s
+   Extended 1–12 = 45 s
+   Pro 1–15      = 50 s
+   Master 1–18   = 60 s
+
+Števec teče za CELO igralčevo rundo.
+Ko pride do 0, se runda zaključi z zatečenim rezultatom.
+
+2) AI RAZMIŠLJANJE:
+   AI v ozadju naključno čaka 2–7 sekund.
+   Čas njegovega razmišljanja se NE prikazuje.
+
+3) KONEC TEKME:
+   Ni več napisa 'Zmagaš!'.
+   Če zmaga igralec: 'ZMAGOVALEC JE <ime>'.
+   Če zmaga AI: 'ŽAL SI IZGUBIL TEKMO' + 'ZMAGOVALEC JE LiMATO AI'.
+   NIŽJI rezultat zmaga.
+
+POMEMBNO:
+V index.html naj bo naložena samo ENA AI Challenge datoteka.
+Odstrani stare AI vrstice in uporabi samo:
+
+<script src="arena-v063-ai-challenge-FIX-5.js?v=065"></script>
+
+Na GitHub naloži:
+- arena-v063-ai-challenge-FIX-5.js
+in popravi samo navedeno vrstico v index.html.
+
+FIX-4 IGNORIRAJ / NE NALAGAJ.
