@@ -11,22 +11,28 @@ const ai={
 };
 
 function injectUI(){
-  if($("aiChallengeBox")) return;
-  const extras=$("extrasMount");
-  const setup=document.querySelector(".setup");
-  const mount=extras || setup;
-  if(!mount) return;
+  // FIX-2: keep the existing setup layout untouched.
+  // Add "🤖 Proti AI" directly into the existing "Način igre" selector.
+  const pm=$("playMode");
+  if(!pm) return;
+
+  if(!pm.querySelector('option[value="ai"]')){
+    const opt=document.createElement("option");
+    opt.value="ai";
+    opt.textContent="🤖 Proti AI";
+    pm.appendChild(opt);
+  }
+
+  const mount=$("extrasMount");
+  if(!mount || $("aiChallengeBox")) return;
+
   const box=document.createElement("section");
-  box.id="aiChallengeBox"; box.className="aiChallengeBox";
+  box.id="aiChallengeBox";
+  box.className="aiChallengeBox";
+  box.hidden=true;
   box.innerHTML=`
     <b>🤖 AI CHALLENGE</b>
     <div class="aiChallengeGrid">
-      <label><span>Način</span>
-        <select id="aiChallengeMode">
-          <option value="off">Samostojno</option>
-          <option value="ai">🤖 Proti AI</option>
-        </select>
-      </label>
       <label><span>Težavnost AI</span>
         <select id="aiLevel">
           <option value="beginner">🟢 Začetnik</option>
@@ -43,19 +49,20 @@ function injectUI(){
       <div id="aiRoundInfo" style="margin-top:8px;text-align:center"></div>
       <div id="aiVerdict" class="aiVerdict"></div>
     </div>`;
-  if(extras){
-    extras.prepend(box);
-  }else{
-    const start=$("start");
-    if(start && start.parentNode===setup) setup.insertBefore(box,start);
-    else setup.appendChild(box);
-  }
-  $("aiChallengeMode").onchange=syncMode;
-  $("aiLevel").onchange=()=>ai.level=$("aiLevel").value;
+  mount.appendChild(box);
+
+  pm.addEventListener("change",syncMode);
+  $("aiLevel").addEventListener("change",()=>{
+    ai.level=$("aiLevel").value;
+    renderAI();
+  });
 }
+
 function syncMode(){
-  ai.enabled=$("aiChallengeMode")?.value==="ai";
+  const pm=$("playMode");
+  ai.enabled=pm?.value==="ai";
   ai.level=$("aiLevel")?.value||"challenger";
+  if($("aiChallengeBox")) $("aiChallengeBox").hidden=!ai.enabled;
   if($("aiScoreCard")) $("aiScoreCard").hidden=!ai.enabled;
 }
 function subsets(nums,target){
@@ -182,5 +189,5 @@ nextRound=function(){
   oldNext();
 };
 injectUI(); syncMode(); renderAI();
-console.info("LiMATO Box Challenge v0.6.3 AI Challenge loaded");
+console.info("LiMATO Box Challenge v0.6.3 AI Challenge FIX-2 loaded");
 })();
