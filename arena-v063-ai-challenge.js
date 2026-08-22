@@ -1,4 +1,4 @@
-/* LiMATO Box Challenge v0.6.3 — AI CHALLENGE — VISIBLE AI ROUND
+/* LiMATO Box Challenge v0.6.3 — AI CHALLENGE — VISIBLE AI ROUND — HUMAN-PACE FIX-2
    Additive patch: keeps Solo / Invite / Arena / Hard Mode intact.
    AI opponent uses the same Box, rounds, dice-change penalties and scoring rules.
 */
@@ -6,7 +6,18 @@
 "use strict";
 const $=id=>document.getElementById(id);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-const humanPause=()=>sleep(1000+Math.floor(Math.random()*6001)); // 1–7 s
+const randomThinkMs=()=>1000+Math.floor(Math.random()*6001); // 1–7 s
+async function humanPause(label="Razmišlja"){
+  const ms=randomThinkMs(), end=Date.now()+ms, live=$("aiLive");
+  while(Date.now()<end){
+    const left=Math.max(0,Math.ceil((end-Date.now())/1000));
+    if(live){
+      const base=live.dataset.base||live.innerHTML||`🤖 <b>LiMATO AI</b>`;
+      live.innerHTML=`${base}<br>⏱️ ${label}: <b>${left} s</b>`;
+    }
+    await sleep(Math.min(250,Math.max(30,end-Date.now())));
+  }
+}
 const ai={
   enabled:false, level:"challenger", results:[], roundLogs:[], running:false
 };
@@ -145,6 +156,30 @@ function renderAI(){
   $("aiRoundInfo").textContent=pairs;
 }
 
+function setLiveBase(html){
+  const live=$("aiLive"); if(!live)return;
+  live.dataset.base=html; live.innerHTML=html;
+}
+function flashAICloseButton(on){
+  const b=$("close"); if(!b)return;
+  if(on){
+    if(!b.dataset.aiOldStyle) b.dataset.aiOldStyle=b.getAttribute("style")||"";
+    b.disabled=true;
+    b.style.setProperty("background","#ffffff","important");
+    b.style.setProperty("color","#21152f","important");
+    b.style.setProperty("border-color","#ffffff","important");
+    b.style.setProperty("opacity","1","important");
+    b.style.setProperty("box-shadow","0 0 16px rgba(255,255,255,.45)","important");
+  }else{
+    const old=b.dataset.aiOldStyle;
+    if(old!==undefined){
+      if(old) b.setAttribute("style",old); else b.removeAttribute("style");
+      delete b.dataset.aiOldStyle;
+    }
+    b.disabled=true;
+  }
+}
+
 async function showAIRound(roundIndex,r){
   const live=$("aiLive");
   if(!live)return;
@@ -171,7 +206,7 @@ async function showAIRound(roundIndex,r){
   };
 
   live.hidden=false;
-  live.innerHTML=`🤖 <b>LiMATO AI — runda ${roundIndex+1}</b><br>🧠 Razmišlja…`;
+  setLiveBase(`🤖 <b>LiMATO AI — runda ${roundIndex+1}</b><br>🧠 Razmišlja…`);
   if($("ai")) $("ai").textContent="🤖 LiMATO AI razmišlja…";
   await humanPause();
 
@@ -179,7 +214,7 @@ async function showAIRound(roundIndex,r){
     const m=r.moves[i];
 
     if(m.switchPenalty){
-      live.innerHTML=`🤖 <b>LiMATO AI — runda ${roundIndex+1}</b><br>🔄 Zamenja število kock na <b>${m.dice}</b> &nbsp; (+${m.switchPenalty} pribitka)`;
+      setLiveBase(`🤖 <b>LiMATO AI — runda ${roundIndex+1}</b><br>🔄 Zamenja število kock na <b>${m.dice}</b> &nbsp; (+${m.switchPenalty} pribitka)`);
       $("diceCount").textContent=m.dice;
       $("penalty").textContent=m.switchPenalty;
       await humanPause();
@@ -191,7 +226,7 @@ async function showAIRound(roundIndex,r){
     $("selected").textContent="0";
     $("score").textContent=m.openBefore.reduce((a,b)=>a+b,0);
     $("dice").innerHTML="";
-    live.innerHTML=`🤖 <b>LiMATO AI — met ${i+1}</b><br>🎲 Meče kocke…`;
+    setLiveBase(`🤖 <b>LiMATO AI — met ${i+1}</b><br>🎲 Meče kocke…`);
     if($("ai")) $("ai").textContent=`🤖 LiMATO AI meče — met ${i+1}`;
     await humanPause();
 
@@ -199,7 +234,7 @@ async function showAIRound(roundIndex,r){
     showDice(m.vals);
     await sleep(900); // existing cube animation is ~820 ms
     $("target").textContent=m.target;
-    live.innerHTML=`🤖 <b>LiMATO AI — met ${i+1}</b><br>🎲 ${m.vals.join(" + ")} = <b>${m.target}</b><br>🧠 Razmišlja…`;
+    setLiveBase(`🤖 <b>LiMATO AI — met ${i+1}</b><br>🎲 ${m.vals.join(" + ")} = <b>${m.target}</b><br>🧠 Razmišlja…`);
     if($("ai")) $("ai").textContent=`🤖 AI je vrgel: ${m.vals.join(" + ")} = ${m.target}`;
     await humanPause();
 
@@ -208,9 +243,10 @@ async function showAIRound(roundIndex,r){
       const tiles=[...document.querySelectorAll("#tiles .tile")];
       m.move.forEach(n=>tiles[n-1]?.classList.add("selected"));
       $("selected").textContent=m.move.reduce((a,b)=>a+b,0);
-      live.innerHTML=`🤖 <b>LiMATO AI — met ${i+1}</b><br>🧠 Izbere: <b>${m.move.join(" + ")}</b>`;
+      setLiveBase(`🤖 <b>LiMATO AI — met ${i+1}</b><br>🧠 Izbere: <b>${m.move.join(" + ")}</b>`);
       if($("ai")) $("ai").textContent=`🤖 AI zapira: ${m.move.join(" + ")}`;
-      await humanPause();
+      flashAICloseButton(true);
+      await humanPause("Zapiram");
 
       let after=m.openBefore.slice();
       for(const n of m.move){
@@ -222,17 +258,19 @@ async function showAIRound(roundIndex,r){
       $("selected").textContent="0";
       $("target").textContent="–";
       $("dice").innerHTML="";
-      await humanPause();
+      flashAICloseButton(false);
+      await humanPause("Naslednja poteza");
     }else{
-      live.innerHTML+=`<br>⛔ Ni veljavne kombinacije. Runda je končana.`;
+      setLiveBase(`${live.dataset.base||live.innerHTML}<br>⛔ Ni veljavne kombinacije. Runda je končana.`);
       if($("ai")) $("ai").textContent="🤖 AI nima veljavne kombinacije";
       await humanPause();
     }
   }
 
-  live.innerHTML=`🤖 <b>LiMATO AI — konec runde ${roundIndex+1}</b><br>Rezultat: <b>${r.score}</b>${r.penalty?` &nbsp; (pribitek ${r.penalty})`:""}`;
+  setLiveBase(`🤖 <b>LiMATO AI — konec runde ${roundIndex+1}</b><br>Rezultat: <b>${r.score}</b>${r.penalty?` &nbsp; (pribitek ${r.penalty})`:""}`);
   if($("ai")) $("ai").textContent=`🤖 AI R${roundIndex+1}: ${r.score}`;
-  await humanPause();
+  await humanPause("Konec runde");
+  flashAICloseButton(false);
   restoreHumanBoard();
 }
 async function runAIForHumanRound(roundIndex){
@@ -271,6 +309,7 @@ finish=function(reason){
   const ret=oldFinish(reason);
   const idx=before;
   if(ai.enabled&&s.results.length>before){
+    renderAI(); // human score refreshes immediately
     runAIForHumanRound(idx).then(()=>{renderAI();if(!s.active)finalVerdict();});
   }
   return ret;
@@ -305,7 +344,7 @@ function bootAIChallenge(){
     tries++;
     if($("playMode")){
       clearInterval(timer);injectUI();syncMode();renderAI();
-      console.info("LiMATO Box Challenge v0.6.3 AI Challenge HUMAN-PACE mounted");
+      console.info("LiMATO Box Challenge v0.6.3 AI Challenge HUMAN-PACE FIX-2 mounted");
     }else if(tries>=100){
       clearInterval(timer);
       console.warn("LiMATO AI Challenge: #playMode was not created in time.");
@@ -313,5 +352,5 @@ function bootAIChallenge(){
   },100);
 }
 bootAIChallenge();
-console.info("LiMATO Box Challenge v0.6.3 AI Challenge HUMAN-PACE loaded");
+console.info("LiMATO Box Challenge v0.6.3 AI Challenge HUMAN-PACE FIX-2 loaded");
 })();
