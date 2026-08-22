@@ -1,4 +1,4 @@
-/* LiMATO Box Challenge v0.6.3 — AI CHALLENGE — VISIBLE AI ROUND — HUMAN-PACE FIX-2
+/* LiMATO Box Challenge v0.6.3 — AI CHALLENGE — TIMER + VERDICT FIX
    Additive patch: keeps Solo / Invite / Arena / Hard Mode intact.
    AI opponent uses the same Box, rounds, dice-change penalties and scoring rules.
 */
@@ -6,21 +6,52 @@
 "use strict";
 const $=id=>document.getElementById(id);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-const randomThinkMs=()=>1000+Math.floor(Math.random()*6001); // 1–7 s
-async function humanPause(label="Razmišlja"){
-  const ms=randomThinkMs(), end=Date.now()+ms, live=$("aiLive");
-  while(Date.now()<end){
-    const left=Math.max(0,Math.ceil((end-Date.now())/1000));
-    if(live){
-      const base=live.dataset.base||live.innerHTML||`🤖 <b>LiMATO AI</b>`;
-      live.innerHTML=`${base}<br>⏱️ ${label}: <b>${left} s</b>`;
-    }
-    await sleep(Math.min(250,Math.max(30,end-Date.now())));
-  }
+const randomThinkMs=()=>1000+Math.floor(Math.random()*6001); // AI delay stays hidden: 1–7 s
+async function humanPause(){
+  await sleep(randomThinkMs());
 }
+
+const TURN_SECONDS={9:40,12:45,15:50,18:60};
 const ai={
-  enabled:false, level:"challenger", results:[], roundLogs:[], running:false
+  enabled:false, level:"challenger", results:[], roundLogs:[], running:false,
+  turnTimer:null, turnEndsAt:0
 };
+
+function turnSeconds(){
+  return TURN_SECONDS[Number(s?.max)] || 40;
+}
+function renderTurnTimer(){
+  const el=$("aiTurnTimer");
+  if(!el)return;
+  if(!ai.enabled || ai.running || !s?.active || !ai.turnEndsAt){
+    el.textContent="--:--";
+    return;
+  }
+  const left=Math.max(0,Math.ceil((ai.turnEndsAt-Date.now())/1000));
+  el.textContent=`00:${String(left).padStart(2,"0")}`;
+  const wrap=$("aiTurnTimerWrap");
+  if(wrap) wrap.style.color=left<=7?"#ff9a9a":"#ffd66d";
+}
+function stopTurnTimer(){
+  if(ai.turnTimer){clearInterval(ai.turnTimer);ai.turnTimer=null;}
+  ai.turnEndsAt=0;
+  renderTurnTimer();
+}
+function startTurnTimer(){
+  stopTurnTimer();
+  if(!ai.enabled || ai.running || !s?.active)return;
+  ai.turnEndsAt=Date.now()+turnSeconds()*1000;
+  renderTurnTimer();
+  ai.turnTimer=setInterval(()=>{
+    renderTurnTimer();
+    if(Date.now()>=ai.turnEndsAt){
+      stopTurnTimer();
+      if(ai.enabled && !ai.running && s?.active){
+        finish("⏱️ Čas je potekel.");
+      }
+    }
+  },200);
+}
 
 function injectUI(){
   const pm=$("playMode");
@@ -52,21 +83,47 @@ function injectUI(){
       </label>
     </div>
     <div id="aiScoreCard" class="aiScoreCard" hidden>
-      <div class="aiScoreRows">
-        <div>👤 <b id="aiHumanName">Igralec</b><br><strong id="aiHumanTotal">0</strong></div>
-        <div>🤖 <b id="aiOpponentName">LiMATO AI</b><br><strong id="aiOpponentTotal">0</strong></div>
+      <div class="aiScoreRows" style="align-items:stretch">
+        <div style="padding:10px">
+          👤 <b id="aiHumanName">Igralec</b><br><strong id="aiHumanTotal">0</strong>
+          <div style="margin-top:8px;font-weight:800;color:#ffd66d">Rezultati</div>
+          <div id="aiHumanRounds" style="margin-top:5px;line-height:1.6">R1: – &nbsp; R2: – &nbsp; R3: –</div>
+        </div>
+        <div style="padding:10px">
+          🤖 <b id="aiOpponentName">LiMATO AI</b><br><strong id="aiOpponentTotal">0</strong>
+          <div style="margin-top:8px;font-weight:800;color:#ffd66d">Rezultati</div>
+          <div id="aiOpponentRounds" style="margin-top:5px;line-height:1.6">R1: – &nbsp; R2: – &nbsp; R3: –</div>
+        </div>
       </div>
-      <div id="aiRoundInfo" style="margin-top:8px;text-align:center"></div>
+      <div id="aiRoundInfo" style="display:none"></div>
       <div id="aiLive" style="margin-top:10px;padding:10px;border-radius:10px;background:rgba(0,0,0,.18);text-align:center;line-height:1.55" hidden></div>
       <div id="aiVerdict" class="aiVerdict"></div>
     </div>`;
   mount.appendChild(box);
+  mountTurnTimerInResultsPanel();
 
   pm.addEventListener("change",syncMode);
   $("aiLevel").addEventListener("change",()=>{
     ai.level=$("aiLevel").value;
     renderAI();
   });
+}
+
+
+
+function mountTurnTimerInResultsPanel(){
+  if($("aiTurnTimerWrap")) return;
+  const candidates=[...document.querySelectorAll("aside,section,div")];
+  const panel=candidates.find(el=>{
+    const txt=(el.textContent||"").trim();
+    return /^Rezultati\b/.test(txt) && /Runda 1/.test(txt) && /Osebni rekord/.test(txt);
+  });
+  if(!panel)return;
+  panel.innerHTML=`
+    <div id="aiTurnTimerWrap" style="height:100%;min-height:190px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-weight:900;color:#ffd66d">
+      <div style="font-size:18px;margin-bottom:12px">⏱️ ODŠTEVALNIK</div>
+      <div id="aiTurnTimer" style="font-size:44px;line-height:1">--:--</div>
+    </div>`;
 }
 
 function syncMode(){
@@ -152,8 +209,11 @@ function renderAI(){
   $("aiOpponentName").textContent="LiMATO AI "+levelName();
   $("aiHumanTotal").textContent=(typeof s!=="undefined"&&Array.isArray(s.results))?s.results.reduce((a,b)=>a+b,0):0;
   $("aiOpponentTotal").textContent=ai.results.reduce((a,b)=>a+b,0);
-  const pairs=ai.results.map((v,i)=>`R${i+1}: 👤 ${s.results[i]??"–"} / 🤖 ${v}`).join(" • ");
-  $("aiRoundInfo").textContent=pairs;
+  const rounds=(typeof s!=="undefined"&&s.rounds)?s.rounds:3;
+  const humanRounds=Array.from({length:rounds},(_,i)=>`R${i+1}: ${s.results[i]??"–"}`).join(" &nbsp; • &nbsp; ");
+  const aiRounds=Array.from({length:rounds},(_,i)=>`R${i+1}: ${ai.results[i]??"–"}`).join(" &nbsp; • &nbsp; ");
+  if($("aiHumanRounds")) $("aiHumanRounds").innerHTML=humanRounds;
+  if($("aiOpponentRounds")) $("aiOpponentRounds").innerHTML=aiRounds;
 }
 
 function setLiveBase(html){
@@ -287,10 +347,16 @@ async function runAIForHumanRound(roundIndex){
 
 function finalVerdict(){
   if(!ai.enabled||ai.results.length!==s.rounds)return;
+  stopTurnTimer();
   const h=s.results.reduce((a,b)=>a+b,0),a=ai.results.reduce((x,y)=>x+y,0);
-  $("aiVerdict").textContent=h<a?`🏆 Zmagaš! ${h} : ${a}`:h>a?`🤖 AI zmaga ${a} : ${h}`:`🤝 Neodločeno ${h} : ${a}`;
+  const human=$("name")?.value.trim()||"Igralec";
+  $("aiVerdict").textContent=
+    h<a ? `🏆 Zmagovalec je ${human}! ${h} : ${a}` :
+    h>a ? `🏆 Zmagovalec je LiMATO AI! ${h} : ${a}` :
+          `🤝 Neodločeno! ${h} : ${a}`;
 }
 function resetAI(){
+  stopTurnTimer();
   syncMode(); ai.results=[]; ai.roundLogs=[]; ai.running=false;
   if($("aiVerdict"))$("aiVerdict").textContent="";
   if($("aiRoundInfo"))$("aiRoundInfo").textContent="";
@@ -301,10 +367,16 @@ function resetAI(){
 const oldStart=startMatch;
 startMatch=function(){
   resetAI(); oldStart();
-  if(ai.enabled){$("aiScoreCard").hidden=false;renderAI();}
+  if(ai.enabled){
+    $("aiScoreCard").hidden=false;
+    mountTurnTimerInResultsPanel();
+    renderAI();
+    startTurnTimer();
+  }
 };
 const oldFinish=finish;
 finish=function(reason){
+  if(ai.enabled) stopTurnTimer();
   const before=s.results.length;
   const ret=oldFinish(reason);
   const idx=before;
@@ -323,6 +395,7 @@ nextRound=function(){
     return;
   }
   oldNext();
+  if(ai.enabled && s.active) startTurnTimer();
 };
 
 // The original button may still hold the old function reference.
@@ -344,7 +417,7 @@ function bootAIChallenge(){
     tries++;
     if($("playMode")){
       clearInterval(timer);injectUI();syncMode();renderAI();
-      console.info("LiMATO Box Challenge v0.6.3 AI Challenge HUMAN-PACE FIX-2 mounted");
+      console.info("LiMATO Box Challenge v0.6.3 AI Challenge TIMER + VERDICT FIX mounted");
     }else if(tries>=100){
       clearInterval(timer);
       console.warn("LiMATO AI Challenge: #playMode was not created in time.");
@@ -352,5 +425,5 @@ function bootAIChallenge(){
   },100);
 }
 bootAIChallenge();
-console.info("LiMATO Box Challenge v0.6.3 AI Challenge HUMAN-PACE FIX-2 loaded");
+console.info("LiMATO Box Challenge v0.6.3 AI Challenge TIMER + VERDICT FIX loaded");
 })();
