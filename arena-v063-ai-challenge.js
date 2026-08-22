@@ -11,7 +11,11 @@ const ai={
 };
 
 function injectUI(){
-  const mount=$("extrasMount"); if(!mount||$("aiChallengeBox")) return;
+  if($("aiChallengeBox")) return;
+  const extras=$("extrasMount");
+  const setup=document.querySelector(".setup");
+  const mount=extras || setup;
+  if(!mount) return;
   const box=document.createElement("section");
   box.id="aiChallengeBox"; box.className="aiChallengeBox";
   box.innerHTML=`
@@ -39,7 +43,13 @@ function injectUI(){
       <div id="aiRoundInfo" style="margin-top:8px;text-align:center"></div>
       <div id="aiVerdict" class="aiVerdict"></div>
     </div>`;
-  mount.prepend(box);
+  if(extras){
+    extras.prepend(box);
+  }else{
+    const start=$("start");
+    if(start && start.parentNode===setup) setup.insertBefore(box,start);
+    else setup.appendChild(box);
+  }
   $("aiChallengeMode").onchange=syncMode;
   $("aiLevel").onchange=()=>ai.level=$("aiLevel").value;
 }
