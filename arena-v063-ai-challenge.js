@@ -1,4 +1,4 @@
-/* LiMATO Box Challenge v0.6.3 — AI CHALLENGE — TIMER + VERDICT FIX
+/* LiMATO Box Challenge v0.6.3 — AI CHALLENGE — START ROLL + PLAYER NAME FIX
    Additive patch: keeps Solo / Invite / Arena / Hard Mode intact.
    AI opponent uses the same Box, rounds, dice-change penalties and scoring rules.
 */
@@ -14,7 +14,7 @@ async function humanPause(){
 const TURN_SECONDS={9:40,12:45,15:50,18:60};
 const ai={
   enabled:false, level:"challenger", results:[], roundLogs:[], running:false,
-  turnTimer:null, turnEndsAt:0
+  turnTimer:null, turnEndsAt:0, starter:"human"
 };
 
 function turnSeconds(){
@@ -96,6 +96,7 @@ function injectUI(){
         </div>
       </div>
       <div id="aiRoundInfo" style="display:none"></div>
+      <div id="aiStartRoll" style="margin-top:10px;padding:10px;border-radius:10px;background:rgba(0,0,0,.18);text-align:center;font-weight:800" hidden></div>
       <div id="aiLive" style="margin-top:10px;padding:10px;border-radius:10px;background:rgba(0,0,0,.18);text-align:center;line-height:1.55" hidden></div>
       <div id="aiVerdict" class="aiVerdict"></div>
     </div>`;
@@ -103,6 +104,9 @@ function injectUI(){
   mountTurnTimerInResultsPanel();
 
   pm.addEventListener("change",syncMode);
+  $("name")?.addEventListener("input",()=>{
+    if($("aiHumanName")) $("aiHumanName").textContent=$("name").value.trim()||"Igralec";
+  });
   $("aiLevel").addEventListener("change",()=>{
     ai.level=$("aiLevel").value;
     renderAI();
@@ -124,6 +128,30 @@ function mountTurnTimerInResultsPanel(){
       <div style="font-size:18px;margin-bottom:12px">⏱️ ODŠTEVALNIK</div>
       <div id="aiTurnTimer" style="font-size:44px;line-height:1">--:--</div>
     </div>`;
+}
+
+
+async function decideWhoStarts(){
+  if(!ai.enabled)return "human";
+  const host=$("aiStartRoll");
+  if(host){host.hidden=false;host.innerHTML="🎲 Kdo začne?";}
+  let h,a;
+  do{
+    h=1+Math.floor(Math.random()*6);
+    a=1+Math.floor(Math.random()*6);
+    if(host){
+      const human=$("name")?.value.trim()||"Igralec";
+      host.innerHTML=`🎲 <b>Kdo začne?</b><br>👤 ${human}: <b>${h}</b> &nbsp; • &nbsp; 🤖 LiMATO AI: <b>${a}</b>`+
+        (h===a?`<br>🤝 Izenačeno — ponovni met…`:"");
+    }
+    if(h===a) await sleep(900);
+  }while(h===a);
+  const starter=h>a?"human":"ai";
+  if(host){
+    const human=$("name")?.value.trim()||"Igralec";
+    host.innerHTML+=`<br>🏁 Začne: <b>${starter==="human"?human:"LiMATO AI"}</b>`;
+  }
+  return starter;
 }
 
 function syncMode(){
@@ -357,7 +385,8 @@ function finalVerdict(){
 }
 function resetAI(){
   stopTurnTimer();
-  syncMode(); ai.results=[]; ai.roundLogs=[]; ai.running=false;
+  syncMode(); ai.results=[]; ai.roundLogs=[]; ai.running=false; ai.starter="human";
+  if($("aiStartRoll")){$("aiStartRoll").hidden=true;$("aiStartRoll").innerHTML="";}
   if($("aiVerdict"))$("aiVerdict").textContent="";
   if($("aiRoundInfo"))$("aiRoundInfo").textContent="";
   if($("aiLive")){$("aiLive").textContent="";$("aiLive").hidden=true;}
@@ -365,11 +394,13 @@ function resetAI(){
 }
 
 const oldStart=startMatch;
-startMatch=function(){
+startMatch=async function(){
   resetAI(); oldStart();
   if(ai.enabled){
     $("aiScoreCard").hidden=false;
     mountTurnTimerInResultsPanel();
+    renderAI();
+    ai.starter=await decideWhoStarts();
     renderAI();
     startTurnTimer();
   }
@@ -417,7 +448,7 @@ function bootAIChallenge(){
     tries++;
     if($("playMode")){
       clearInterval(timer);injectUI();syncMode();renderAI();
-      console.info("LiMATO Box Challenge v0.6.3 AI Challenge TIMER + VERDICT FIX mounted");
+      console.info("LiMATO Box Challenge v0.6.3 AI Challenge START ROLL + PLAYER NAME FIX mounted");
     }else if(tries>=100){
       clearInterval(timer);
       console.warn("LiMATO AI Challenge: #playMode was not created in time.");
@@ -425,5 +456,5 @@ function bootAIChallenge(){
   },100);
 }
 bootAIChallenge();
-console.info("LiMATO Box Challenge v0.6.3 AI Challenge TIMER + VERDICT FIX loaded");
+console.info("LiMATO Box Challenge v0.6.3 AI Challenge START ROLL + PLAYER NAME FIX loaded");
 })();
