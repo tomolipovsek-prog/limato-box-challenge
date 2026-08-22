@@ -375,16 +375,6 @@ async function runAIForHumanRound(roundIndex){
   renderAI();
 }
 
-function finalVerdict(){
-  if(!ai.enabled||ai.results.length!==s.rounds)return;
-  stopTurnTimer();
-  const h=s.results.reduce((a,b)=>a+b,0),a=ai.results.reduce((x,y)=>x+y,0);
-  const human=$("name")?.value.trim()||"Igralec";
-  $("aiVerdict").textContent=
-    h<a ? `🏆 Zmagovalec je ${human}! ${h} : ${a}` :
-    h>a ? `🏆 Zmagovalec je LiMATO AI! ${h} : ${a}` :
-          `🤝 Neodločeno! ${h} : ${a}`;
-}
 function resetAI(){
   stopTurnTimer();
   syncMode(); ai.results=[]; ai.roundLogs=[]; ai.running=false; ai.starter="human";
@@ -395,70 +385,125 @@ function resetAI(){
   renderAI();
 }
 
-const oldStart=startMatch;
-startMatch=async function(){
-  resetAI(); oldStart();
-  if(ai.enabled){
-    $("aiScoreCard").hidden=false;
-    mountTurnTimerInResultsPanel();
-    renderAI();
-    ai.starter=await decideWhoStarts();
-    renderAI();
+// --- Stable event/state bridge -------------------------------------------------
+// v0.6.0/v0.6.1 install their own click handlers after the core.  Instead of
+// depending on replacing startMatch/finish, observe the real core state `s`.
+let humanRoundBusy=false;
+let seenHumanResults=0;
+let stateWatch=null;
+
+function setHumanControlsLocked(locked){
+  ["roll","close","change","diceChoice"].forEach(id=>{
+    const el=$(id); if(el) el.disabled=!!locked;
+  });
+}
+
+function humanName(){
+  return $("name")?.value.trim() || $("player")?.textContent.trim() || "Igralec";
+}
+
+async function beginAIHumanMatch(){
+  if(!ai.enabled || !s?.active || humanRoundBusy) return;
+  humanRoundBusy=true;
+  seenHumanResults=s.results.length;
+  ai.results=[]; ai.roundLogs=[]; ai.running=false;
+  renderAI();
+
+  // KDO ZAČNE is a real opening phase. Human controls stay locked until it ends.
+  stopTurnTimer();
+  setHumanControlsLocked(true);
+  ai.starter=await decideWhoStarts();
+
+  if(ai.starter==="ai"){
+    ai.running=true;
+    const r=await playAIRound(s.max,ai.level);
+    await showAIRound(0,r);
+    ai.results[0]=r.score; ai.roundLogs[0]=r;
+    ai.running=false; renderAI();
+  }
+
+  // Human now gets the same round. Restore exactly the controls valid at its start.
+  if(s.active && s.results.length===0){
+    $("roll").disabled=false;
+    $("close").disabled=true;
+    $("change").disabled=s.switches>=3;
+    $("diceChoice").disabled=s.switches>=3;
     startTurnTimer();
   }
-};
-const oldFinish=finish;
-finish=function(reason){
-  if(ai.enabled) stopTurnTimer();
-  const before=s.results.length;
-  const ret=oldFinish(reason);
-  const idx=before;
-  if(ai.enabled&&s.results.length>before){
-    renderAI(); // human score refreshes immediately
-    runAIForHumanRound(idx).then(()=>{renderAI();if(!s.active)finalVerdict();});
-  }
-  return ret;
-};
-const oldNext=nextRound;
-nextRound=function(){
-  if(ai.enabled&&ai.running){setMsg("🤖 AI še zaključuje svojo rundo…");return;}
-  // Never allow a phantom round (e.g. 3/4 after a 3-round match).
-  if(!s.active||s.round>=s.rounds){
-    $("next").hidden=true;
-    return;
-  }
-  oldNext();
-  if(ai.enabled && s.active) startTurnTimer();
-};
+  humanRoundBusy=false;
+}
 
-// The original button may still hold the old function reference.
-// Capture the click first and block it while AI is playing or when the match is already over.
-document.addEventListener("click",e=>{
-  const b=e.target.closest?.("#next");
-  if(!b)return;
-  if((ai.enabled&&ai.running)||!s.active||s.round>=s.rounds){
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    if(ai.enabled&&ai.running)setMsg("🤖 AI še zaključuje svojo rundo…");
-    else b.hidden=true;
+async function onHumanRoundFinished(idx){
+  if(!ai.enabled || ai.running) return;
+  stopTurnTimer();
+  // If AI opened round 1, its R1 is already recorded.
+  if(ai.results[idx] == null){
+    ai.running=true; setHumanControlsLocked(true);
+    const r=await playAIRound(s.max,ai.level);
+    await showAIRound(idx,r);
+    ai.results[idx]=r.score; ai.roundLogs[idx]=r;
+    ai.running=false; renderAI();
   }
-},true);
+
+  // Core exposes NEXT only after the human round. Keep it usable after AI finishes.
+  if(s.active && s.round<s.rounds){
+    $("next").hidden=false;
+  }else{
+    $("next").hidden=true;
+    stopTurnTimer();
+  }
+}
+
+function pollAIState(){
+  if(!ai.enabled) return;
+  renderAI();
+
+  // Core appended a human score => the human round really ended (including NO MOVE).
+  if(s.results.length>seenHumanResults){
+    const from=seenHumanResults;
+    seenHumanResults=s.results.length;
+    for(let i=from;i<s.results.length;i++) onHumanRoundFinished(i);
+  }
+}
+
+function installStableBridge(){
+  if(stateWatch) return;
+  stateWatch=setInterval(pollAIState,120);
+
+  // Start/new: let the core create the match first, then run opening roll.
+  ["start","new"].forEach(id=>$(id)?.addEventListener("click",()=>{
+    setTimeout(()=>{
+      syncMode();
+      if(ai.enabled && s?.active){ resetAI(); beginAIHumanMatch(); }
+    },0);
+  }));
+
+  // NEXT: the core has already advanced to the new human round.
+  $("next")?.addEventListener("click",()=>setTimeout(()=>{
+    if(!ai.enabled || !s?.active) return;
+    renderAI();
+    startTurnTimer();
+  },0));
+
+  // Keep timer honest: it starts when a human round is playable, not while dice animate.
+  $("roll")?.addEventListener("click",()=>{
+    if(ai.enabled && s?.active && !ai.running && !ai.turnEndsAt) startTurnTimer();
+  },true);
+}
 
 function bootAIChallenge(){
   let tries=0;
   const timer=setInterval(()=>{
     tries++;
     if($("playMode")){
-      clearInterval(timer);injectUI();syncMode();renderAI();
-      if($("start")) $("start").onclick=()=>startMatch();
-      if($("new")) $("new").onclick=()=>startMatch();
-      if($("name")){
+      clearInterval(timer);injectUI();syncMode();renderAI();installStableBridge();
+            if($("name")){
         const syncHumanName=()=>{if($("aiHumanName")) $("aiHumanName").textContent=$("name").value.trim()||$("player")?.textContent.trim()||"Igralec";};
         $("name").addEventListener("input",syncHumanName);
         $("name").addEventListener("change",syncHumanName);
         syncHumanName();
       }
-      console.info("LiMATO Box Challenge v0.6.3 AI Challenge STABLE FIX-10 mounted");
+      console.info("LiMATO Box Challenge v0.6.3 AI Challenge STABLE FIX-11 mounted");
     }else if(tries>=100){
       clearInterval(timer);
       console.warn("LiMATO AI Challenge: #playMode was not created in time.");
@@ -466,5 +511,5 @@ function bootAIChallenge(){
   },100);
 }
 bootAIChallenge();
-console.info("LiMATO Box Challenge v0.6.3 AI Challenge STABLE FIX-10 loaded");
+console.info("LiMATO Box Challenge v0.6.3 AI Challenge STABLE FIX-11 loaded");
 })();

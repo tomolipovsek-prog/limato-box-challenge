@@ -1,0 +1,18 @@
+LiMATO Box Challenge v0.6.3 — AI CHALLENGE FIX-11
+
+Na GitHub naloži in prepiši samo:
+1. arena-v063-ai-challenge.js
+2. index.html
+
+Popravljeno:
+- začetni met KDO ZAČNE se sproži ob začetku AI tekme;
+- če začne AI, AI dejansko odigra prvo rundo pred igralcem;
+- odštevalnik se zažene za igralčevo rundo in se ustavi ob koncu runde;
+- konec igralčeve runde se zazna iz dejanskega rezultata osnovne igre, tudi ko ni več možne kombinacije;
+- AI po igralčevi končani rundi samodejno odigra svojo rundo;
+- po AI rundi ostane pravilen prehod na NASLEDNJO RUNDO;
+- zadnja runda ne ustvari fantomske dodatne runde;
+- igralno ime v AI tabeli se sinhronizira z igralnim imenom;
+- odstranjeno končno besedilo 'Žal si izgubil tekmo' / 'Zmagovalec je ...'.
+
+Po nalaganju počakaj GitHub Pages približno minuto in naredi trdo osvežitev strani (Ctrl+F5).
