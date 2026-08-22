@@ -134,23 +134,25 @@ function mountTurnTimerInResultsPanel(){
 async function decideWhoStarts(){
   if(!ai.enabled)return "human";
   const host=$("aiStartRoll");
-  if(host){host.hidden=false;host.innerHTML="🎲 Kdo začne?";}
-  let h,a;
+  const human=$("name")?.value.trim()||$("player")?.textContent.trim()||"Igralec";
+  if(host){host.hidden=false;host.innerHTML="🎲 <b>Kdo začne?</b><br>Oba vržeta 4 kocke — nižji seštevek začne.";}
+  let hd,ad,hs,as;
   do{
-    h=1+Math.floor(Math.random()*6);
-    a=1+Math.floor(Math.random()*6);
+    hd=Array.from({length:4},()=>1+Math.floor(Math.random()*6));
+    ad=Array.from({length:4},()=>1+Math.floor(Math.random()*6));
+    hs=hd.reduce((x,y)=>x+y,0);
+    as=ad.reduce((x,y)=>x+y,0);
     if(host){
-      const human=$("name")?.value.trim()||"Igralec";
-      host.innerHTML=`🎲 <b>Kdo začne?</b><br>👤 ${human}: <b>${h}</b> &nbsp; • &nbsp; 🤖 LiMATO AI: <b>${a}</b>`+
-        (h===a?`<br>🤝 Izenačeno — ponovni met…`:"");
+      host.innerHTML=
+        `🎲 <b>Kdo začne?</b><br>`+
+        `👤 ${human}: ${hd.join(" + ")} = <b>${hs}</b><br>`+
+        `🤖 LiMATO AI: ${ad.join(" + ")} = <b>${as}</b>`+
+        (hs===as?`<br>🤝 Izenačeno — ponovni met…`:"");
     }
-    if(h===a) await sleep(900);
-  }while(h===a);
-  const starter=h>a?"human":"ai";
-  if(host){
-    const human=$("name")?.value.trim()||"Igralec";
-    host.innerHTML+=`<br>🏁 Začne: <b>${starter==="human"?human:"LiMATO AI"}</b>`;
-  }
+    if(hs===as) await sleep(1000);
+  }while(hs===as);
+  const starter=hs<as?"human":"ai";
+  if(host) host.innerHTML+=`<br>🏁 Začne: <b>${starter==="human"?human:"LiMATO AI"}</b>`;
   return starter;
 }
 
@@ -233,7 +235,7 @@ function renderAI(){
   if(!$("aiScoreCard"))return;
   $("aiScoreCard").hidden=!ai.enabled;
   if(!ai.enabled)return;
-  $("aiHumanName").textContent=$("name")?.value.trim()||"Igralec";
+  $("aiHumanName").textContent=$("name")?.value.trim()||$("player")?.textContent.trim()||"Igralec";
   $("aiOpponentName").textContent="LiMATO AI "+levelName();
   $("aiHumanTotal").textContent=(typeof s!=="undefined"&&Array.isArray(s.results))?s.results.reduce((a,b)=>a+b,0):0;
   $("aiOpponentTotal").textContent=ai.results.reduce((a,b)=>a+b,0);
@@ -448,7 +450,15 @@ function bootAIChallenge(){
     tries++;
     if($("playMode")){
       clearInterval(timer);injectUI();syncMode();renderAI();
-      console.info("LiMATO Box Challenge v0.6.3 AI Challenge START ROLL + PLAYER NAME FIX mounted");
+      if($("start")) $("start").onclick=()=>startMatch();
+      if($("new")) $("new").onclick=()=>startMatch();
+      if($("name")){
+        const syncHumanName=()=>{if($("aiHumanName")) $("aiHumanName").textContent=$("name").value.trim()||$("player")?.textContent.trim()||"Igralec";};
+        $("name").addEventListener("input",syncHumanName);
+        $("name").addEventListener("change",syncHumanName);
+        syncHumanName();
+      }
+      console.info("LiMATO Box Challenge v0.6.3 AI Challenge STABLE FIX-10 mounted");
     }else if(tries>=100){
       clearInterval(timer);
       console.warn("LiMATO AI Challenge: #playMode was not created in time.");
@@ -456,5 +466,5 @@ function bootAIChallenge(){
   },100);
 }
 bootAIChallenge();
-console.info("LiMATO Box Challenge v0.6.3 AI Challenge START ROLL + PLAYER NAME FIX loaded");
+console.info("LiMATO Box Challenge v0.6.3 AI Challenge STABLE FIX-10 loaded");
 })();

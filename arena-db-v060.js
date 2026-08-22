@@ -53,7 +53,11 @@ async function upsertProfile(nickname, completedGames=0){
 
 async function requestEmailIdentity(email){
   await ensureAuth();
-  const {data,error}=await sb.auth.updateUser({email:String(email||"").trim()});
+  const publicUrl="https://tomolipovsek-prog.github.io/limato-box-challenge/";
+  const {data,error}=await sb.auth.updateUser(
+    {email:String(email||"").trim()},
+    {emailRedirectTo:publicUrl}
+  );
   if(error) throw error;
   return data;
 }

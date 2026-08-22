@@ -1,0 +1,18 @@
+LiMATO BOX CHALLENGE — STABLE FIX-10
+
+NA GITHUB PREPIŠI SAMO TI DVE DATOTEKI:
+1. arena-v063-ai-challenge.js
+2. arena-db-v060.js
+
+POPRAVLJENO:
+- gumb ZAČNI TEKMO je ponovno vezan na aktualni AI modul (glavni vzrok, da FIX-8/9 ni sprožil novih funkcij);
+- spodaj se sinhronizira dejansko igralno ime (npr. Lipe67);
+- začetni žreb: oba vržeta 4 kocke, NIŽJI seštevek začne; izenačenje = ponovni met;
+- odštevalnik se zažene skozi pravi AI start wrapper;
+- AI razmišljanje 1–7 s ostane skrito;
+- Supabase email change dobi javni GitHub Pages redirect:
+  https://tomolipovsek-prog.github.io/limato-box-challenge/
+
+POMEMBNO ZA SUPABASE:
+V Authentication > URL Configuration mora biti javni naslov dovoljen kot Redirect URL.
+Če je tam še vedno samo localhost, ga je treba dodati tudi v Supabase nadzorni plošči.
