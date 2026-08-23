@@ -1,4 +1,4 @@
-/* LiMATO Box Challenge v0.6.3 — AI CHALLENGE — FIX-15 START BUTTON FLOW
+/* LiMATO Box Challenge v0.6.3 — AI CHALLENGE — PRODUCTION FLOW FIX-16
    Additive patch: keeps Solo / Invite / Arena / Hard Mode intact.
    AI opponent uses the same Box, rounds, dice-change penalties and scoring rules.
 */
@@ -14,7 +14,7 @@ async function humanPause(){
 const TURN_SECONDS={9:40,12:45,15:50,18:60};
 const ai={
   enabled:false, level:"challenger", results:[], roundLogs:[], running:false,
-  turnTimer:null, turnEndsAt:0, starter:"human"
+  turnTimer:null, turnEndsAt:0, turnOwner:null, starter:"human"
 };
 
 function turnSeconds(){
@@ -23,7 +23,7 @@ function turnSeconds(){
 function renderTurnTimer(){
   const el=$("aiTurnTimer");
   if(!el)return;
-  if(!ai.enabled || ai.running || !s?.active || !ai.turnEndsAt){
+  if(!ai.enabled || !s?.active || !ai.turnEndsAt){
     el.textContent="--:--";
     return;
   }
@@ -35,18 +35,20 @@ function renderTurnTimer(){
 function stopTurnTimer(){
   if(ai.turnTimer){clearInterval(ai.turnTimer);ai.turnTimer=null;}
   ai.turnEndsAt=0;
+  ai.turnOwner=null;
   renderTurnTimer();
 }
-function startTurnTimer(){
+function startTurnTimer(owner="human"){
   stopTurnTimer();
-  if(!ai.enabled || ai.running || !s?.active)return;
+  if(!ai.enabled || !s?.active)return;
+  ai.turnOwner=owner;
   ai.turnEndsAt=Date.now()+turnSeconds()*1000;
   renderTurnTimer();
   ai.turnTimer=setInterval(()=>{
     renderTurnTimer();
     if(Date.now()>=ai.turnEndsAt){
       stopTurnTimer();
-      if(ai.enabled && !ai.running && s?.active){
+      if(ai.enabled && ai.turnOwner==="human" && !ai.running && s?.active){
         finish("⏱️ Čas je potekel.");
       }
     }
@@ -123,34 +125,44 @@ function mountTurnTimerInResultsPanel(){
     return /^Rezultati\b/.test(txt) && /Runda 1/.test(txt) && /Osebni rekord/.test(txt);
   });
   if(!panel)return;
-  panel.innerHTML=`
-    <div id="aiTurnTimerWrap" style="height:100%;min-height:190px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-weight:900;color:#ffd66d">
-      <div style="font-size:18px;margin-bottom:12px">⏱️ ODŠTEVALNIK</div>
-      <div id="aiTurnTimer" style="font-size:44px;line-height:1">--:--</div>
-    </div>`;
+  // IMPORTANT: never replace panel.innerHTML here. The core game keeps #results,
+  // #sum and #best in this panel. Deleting them aborts startMatch() before the
+  // opening roll and timer can start. Keep those nodes alive, only hide them.
+  const stash=document.createElement("div");
+  stash.id="aiResultsCoreStash";
+  stash.style.display="none";
+  while(panel.firstChild) stash.appendChild(panel.firstChild);
+  panel.appendChild(stash);
+  const wrap=document.createElement("div");
+  wrap.id="aiTurnTimerWrap";
+  wrap.style.cssText="height:100%;min-height:190px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-weight:900;color:#ffd66d";
+  wrap.innerHTML=`<div style="font-size:18px;margin-bottom:12px">⏱️ ODŠTEVALNIK</div><div id="aiTurnTimer" style="font-size:44px;line-height:1">--:--</div>`;
+  panel.appendChild(wrap);
 }
 
 
 async function decideWhoStarts(){
   if(!ai.enabled)return "human";
   const host=$("aiStartRoll");
-  if(host){host.hidden=false;host.innerHTML="🎲 Kdo začne?";}
-  let h,a;
+  const human=$("name")?.value.trim()||$("player")?.textContent.trim()||"Igralec";
+  if(host){host.hidden=false;host.innerHTML="🎲 <b>Kdo začne?</b><br>Oba vržeta 4 kocke — nižji seštevek začne.";}
+  let hd,ad,hs,as;
   do{
-    h=1+Math.floor(Math.random()*6);
-    a=1+Math.floor(Math.random()*6);
+    hd=Array.from({length:4},()=>1+Math.floor(Math.random()*6));
+    ad=Array.from({length:4},()=>1+Math.floor(Math.random()*6));
+    hs=hd.reduce((x,y)=>x+y,0);
+    as=ad.reduce((x,y)=>x+y,0);
     if(host){
-      const human=$("name")?.value.trim()||"Igralec";
-      host.innerHTML=`🎲 <b>Kdo začne?</b><br>👤 ${human}: <b>${h}</b> &nbsp; • &nbsp; 🤖 LiMATO AI: <b>${a}</b>`+
-        (h===a?`<br>🤝 Izenačeno — ponovni met…`:"");
+      host.innerHTML=
+        `🎲 <b>Kdo začne?</b><br>`+
+        `👤 ${human}: ${hd.join(" + ")} = <b>${hs}</b><br>`+
+        `🤖 LiMATO AI: ${ad.join(" + ")} = <b>${as}</b>`+
+        (hs===as?`<br>🤝 Izenačeno — ponovni met…`:"");
     }
-    if(h===a) await sleep(900);
-  }while(h===a);
-  const starter=h>a?"human":"ai";
-  if(host){
-    const human=$("name")?.value.trim()||"Igralec";
-    host.innerHTML+=`<br>🏁 Začne: <b>${starter==="human"?human:"LiMATO AI"}</b>`;
-  }
+    if(hs===as) await sleep(1000);
+  }while(hs===as);
+  const starter=hs<as?"human":"ai";
+  if(host) host.innerHTML+=`<br>🏁 Začne: <b>${starter==="human"?human:"LiMATO AI"}</b>`;
   return starter;
 }
 
@@ -233,7 +245,7 @@ function renderAI(){
   if(!$("aiScoreCard"))return;
   $("aiScoreCard").hidden=!ai.enabled;
   if(!ai.enabled)return;
-  $("aiHumanName").textContent=$("name")?.value.trim()||"Igralec";
+  $("aiHumanName").textContent=$("name")?.value.trim()||$("player")?.textContent.trim()||"Igralec";
   $("aiOpponentName").textContent="LiMATO AI "+levelName();
   $("aiHumanTotal").textContent=(typeof s!=="undefined"&&Array.isArray(s.results))?s.results.reduce((a,b)=>a+b,0):0;
   $("aiOpponentTotal").textContent=ai.results.reduce((a,b)=>a+b,0);
@@ -364,13 +376,18 @@ async function showAIRound(roundIndex,r){
 async function runAIForHumanRound(roundIndex){
   if(!ai.enabled||ai.running||ai.results.length>roundIndex)return;
   ai.running=true;
+  startTurnTimer("ai");
   if($("ai")) $("ai").textContent="🤖 LiMATO AI razmišlja…";
-  const r=await playAIRound(s.max,ai.level);
-  await showAIRound(roundIndex,r);
-  ai.results[roundIndex]=r.score;
-  ai.roundLogs[roundIndex]=r;
-  ai.running=false;
-  renderAI();
+  try{
+    const r=await playAIRound(s.max,ai.level);
+    await showAIRound(roundIndex,r);
+    ai.results[roundIndex]=r.score;
+    ai.roundLogs[roundIndex]=r;
+  }finally{
+    stopTurnTimer();
+    ai.running=false;
+    renderAI();
+  }
 }
 
 function finalVerdict(){
@@ -394,104 +411,59 @@ function resetAI(){
 }
 
 const oldStart=startMatch;
-const oldFinish=finish;
-const oldNext=nextRound;
-
-// FIX-14: one authoritative AI match flow.  The core game owns the human board;
-// this controller owns only the opponent turn and the transition between rounds.
-let aiTransition=false;
-
-async function playAIBeforeHuman(roundIndex){
-  if(!ai.enabled || ai.starter!=="ai" || ai.results[roundIndex]!==undefined) return;
-  stopTurnTimer();
-  await showTurn("LiMATO AI");
-  await runAIForHumanRound(roundIndex);
-  renderAI();
-  if(s.active){
-    await showTurn($("name")?.value.trim()||"Igralec");
-    startTurnTimer();
-  }
-}
-
-async function playAIAfterHuman(roundIndex){
-  if(!ai.enabled || ai.starter!=="human" || ai.results[roundIndex]!==undefined) return;
-  stopTurnTimer();
-  await showTurn("LiMATO AI");
-  await runAIForHumanRound(roundIndex);
-  renderAI();
-}
-
 startMatch=async function(){
-  if(aiTransition)return;
-  resetAI();
-  oldStart();
-  if(!ai.enabled)return;
-  $("aiScoreCard").hidden=false;
-  mountTurnTimerInResultsPanel();
-  renderAI();
-  ai.starter=await decideWhoStarts();
-  renderAI();
-  if(ai.starter==="ai") await playAIBeforeHuman(0);
-  else startTurnTimer();
+  resetAI(); oldStart();
+  if(ai.enabled){
+    $("aiScoreCard").hidden=false;
+    mountTurnTimerInResultsPanel();
+    renderAI();
+    ai.starter=await decideWhoStarts();
+    renderAI();
+    if(ai.starter==="ai") await runAIForHumanRound(0);
+    if(s.active) startTurnTimer("human");
+  }
 };
-
+const oldFinish=finish;
 finish=function(reason){
   if(ai.enabled) stopTurnTimer();
   const before=s.results.length;
   const ret=oldFinish(reason);
-  if(!ai.enabled)return ret;
   const idx=before;
-  if(s.results.length>before){
-    renderAI();
-    // If human starts each round, AI follows the human.  Do not advance the
-    // round here: the NEXT ROUND button remains the single transition point.
-    if(ai.starter==="human"){
-      aiTransition=true;
-      playAIAfterHuman(idx).then(()=>{
-        aiTransition=false;
-        renderAI();
-        if(!s.active) finalVerdict();
-      }).catch(e=>{aiTransition=false;console.error("LiMATO AI turn:",e);});
-    }else if(!s.active){
-      finalVerdict();
-    }
+  if(ai.enabled&&s.results.length>before){
+    renderAI(); // human score refreshes immediately
+    const afterAI=()=>{renderAI();if(!s.active)finalVerdict();};
+    if(ai.results.length<=idx) runAIForHumanRound(idx).then(afterAI);
+    else afterAI();
   }
   return ret;
 };
-
-async function controlledNextRound(){
-  if(!ai.enabled)return oldNext();
-  if(aiTransition||ai.running){setMsg("🤖 AI še zaključuje svojo rundo…");return;}
-  if(!s.active||s.round>=s.rounds){$("next").hidden=true;finalVerdict();return;}
-  // Never advance until both scores for the current round exist.
-  const currentIndex=s.round-1;
-  if(s.results[currentIndex]===undefined || ai.results[currentIndex]===undefined){
-    setMsg("⏳ Runda še ni zaključena za oba igralca.");
+const oldNext=nextRound;
+nextRound=async function(){
+  if(ai.enabled&&ai.running){setMsg("🤖 AI še zaključuje svojo rundo…");return;}
+  // Never allow a phantom round (e.g. 3/4 after a 3-round match).
+  if(!s.active||s.round>=s.rounds){
+    $("next").hidden=true;
     return;
   }
-  aiTransition=true;
-  try{
-    oldNext();
-    renderAI();
-    if(!s.active){$("next").hidden=true;finalVerdict();return;}
-    const newIndex=s.round-1;
-    if(ai.starter==="ai") await playAIBeforeHuman(newIndex);
-    else{
-      await showTurn($("name")?.value.trim()||"Igralec");
-      startTurnTimer();
-    }
-  }finally{aiTransition=false;}
-}
+  oldNext();
+  if(ai.enabled && s.active){
+    const idx=s.round-1;
+    if(ai.starter==="ai" && ai.results.length<=idx) await runAIForHumanRound(idx);
+    if(s.active) startTurnTimer("human");
+  }
+};
 
-// Some core builds attached #next before this patch loaded and therefore keep
-// the old function reference.  In AI mode we capture that click and route it
-// through exactly one transition controller; this prevents duplicate/phantom rounds.
+// The original button may still hold the old function reference.
+// Capture the click first and block it while AI is playing or when the match is already over.
 document.addEventListener("click",e=>{
   const b=e.target.closest?.("#next");
-  if(!b||!ai.enabled)return;
-  e.preventDefault();
-  e.stopImmediatePropagation();
-  controlledNextRound();
+  if(!b)return;
+  if((ai.enabled&&ai.running)||!s.active||s.round>=s.rounds){
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    if(ai.enabled&&ai.running)setMsg("🤖 AI še zaključuje svojo rundo…");
+    else b.hidden=true;
+  }
 },true);
 
 function bootAIChallenge(){
@@ -500,15 +472,16 @@ function bootAIChallenge(){
     tries++;
     if($("playMode")){
       clearInterval(timer);injectUI();syncMode();renderAI();
-
-      // FIX-15: the core attached these buttons before this patch loaded.
-      // Rebind them to the NEW AI-aware startMatch controller; otherwise
-      // clicking START/NEW still calls the old core startMatch and skips
-      // opening roll, timer and the visible AI turn.
       if($("start")) $("start").onclick=()=>startMatch();
       if($("new")) $("new").onclick=()=>startMatch();
-
-      console.info("LiMATO Box Challenge v0.6.3 AI Challenge FIX-15 START BUTTON FLOW mounted");
+      if($("next")) $("next").onclick=()=>nextRound();
+      if($("name")){
+        const syncHumanName=()=>{if($("aiHumanName")) $("aiHumanName").textContent=$("name").value.trim()||$("player")?.textContent.trim()||"Igralec";};
+        $("name").addEventListener("input",syncHumanName);
+        $("name").addEventListener("change",syncHumanName);
+        syncHumanName();
+      }
+      console.info("LiMATO Box Challenge v0.6.3 AI Challenge PRODUCTION FLOW FIX-16 mounted");
     }else if(tries>=100){
       clearInterval(timer);
       console.warn("LiMATO AI Challenge: #playMode was not created in time.");
@@ -516,5 +489,5 @@ function bootAIChallenge(){
   },100);
 }
 bootAIChallenge();
-console.info("LiMATO Box Challenge v0.6.3 AI Challenge FIX-15 START BUTTON FLOW loaded");
+console.info("LiMATO Box Challenge v0.6.3 AI Challenge PRODUCTION FLOW FIX-16 loaded");
 })();

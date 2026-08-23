@@ -1,0 +1,16 @@
+LiMATO Box Challenge v0.6.3 — PRODUCTION FLOW FIX-16
+
+Na GitHub zamenjaj SAMO arena-v063-ai-challenge.js.
+
+Ključni popravek: odštevalnik je prej z innerHTML izbrisal #results/#sum/#best.
+Zaradi tega se je core startMatch prekinil, zato se niso sprožili niti KDO ZAČNE niti timer niti AI začetni tok.
+FIX-16 te elemente ohrani v DOM-u.
+
+Dodatno:
+- 4+4 kocke KDO ZAČNE, nižji seštevek začne;
+- timer je viden tudi med AI potezo;
+- če začne AI, odigra svojo rundo pred igralcem;
+- NASLEDNJA RUNDA uporablja isti vrstni red;
+- obstoječa osnovna pravila Boxa niso spremenjena.
+
+Po uploadu: Commit changes -> počakaj Pages deploy -> Ctrl+F5.
