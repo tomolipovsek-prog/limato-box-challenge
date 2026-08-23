@@ -375,6 +375,16 @@ async function runAIForHumanRound(roundIndex){
   renderAI();
 }
 
+function renderFinalVerdict(){
+  if(!ai.enabled || s.active || s.results.length!==s.rounds || ai.results.length!==s.rounds)return;
+  const h=s.results.reduce((a,b)=>a+b,0);
+  const a=ai.results.reduce((x,y)=>x+y,0);
+  const name=humanName();
+  const host=$("aiVerdict");
+  if(!host)return;
+  host.textContent=h<a?`🏆 ZMAGOVALEC JE ${name} — ${h} : ${a}`:h>a?`🤖 ZMAGOVALEC JE LiMATO AI — ${a} : ${h}`:`🤝 NEODLOČENO — ${h} : ${a}`;
+}
+
 function resetAI(){
   stopTurnTimer();
   syncMode(); ai.results=[]; ai.roundLogs=[]; ai.running=false; ai.starter="human";
@@ -389,6 +399,7 @@ function resetAI(){
 // v0.6.0/v0.6.1 install their own click handlers after the core.  Instead of
 // depending on replacing startMatch/finish, observe the real core state `s`.
 let humanRoundBusy=false;
+let aiPostRoundBusy=false;
 let seenHumanResults=0;
 let stateWatch=null;
 
@@ -406,7 +417,7 @@ async function beginAIHumanMatch(){
   if(!ai.enabled || !s?.active || humanRoundBusy) return;
   humanRoundBusy=true;
   seenHumanResults=s.results.length;
-  ai.results=[]; ai.roundLogs=[]; ai.running=false;
+  ai.results=[]; ai.roundLogs=[]; ai.running=false; aiPostRoundBusy=false;
   renderAI();
 
   // KDO ZAČNE is a real opening phase. Human controls stay locked until it ends.
@@ -434,7 +445,8 @@ async function beginAIHumanMatch(){
 }
 
 async function onHumanRoundFinished(idx){
-  if(!ai.enabled || ai.running) return;
+  if(!ai.enabled || aiPostRoundBusy) return;
+  aiPostRoundBusy=true;
   stopTurnTimer();
   // If AI opened round 1, its R1 is already recorded.
   if(ai.results[idx] == null){
@@ -451,7 +463,9 @@ async function onHumanRoundFinished(idx){
   }else{
     $("next").hidden=true;
     stopTurnTimer();
+    renderFinalVerdict();
   }
+  aiPostRoundBusy=false;
 }
 
 function pollAIState(){
@@ -503,7 +517,7 @@ function bootAIChallenge(){
         $("name").addEventListener("change",syncHumanName);
         syncHumanName();
       }
-      console.info("LiMATO Box Challenge v0.6.3 AI Challenge STABLE FIX-12 mounted");
+      console.info("LiMATO Box Challenge v0.6.3 AI Challenge STABLE FIX-13 mounted");
     }else if(tries>=100){
       clearInterval(timer);
       console.warn("LiMATO AI Challenge: #playMode was not created in time.");
@@ -511,5 +525,5 @@ function bootAIChallenge(){
   },100);
 }
 bootAIChallenge();
-console.info("LiMATO Box Challenge v0.6.3 AI Challenge STABLE FIX-12 loaded");
+console.info("LiMATO Box Challenge v0.6.3 AI Challenge STABLE FIX-13 loaded");
 })();

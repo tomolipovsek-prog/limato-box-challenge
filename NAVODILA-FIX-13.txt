@@ -1,0 +1,20 @@
+LiMATO BOX CHALLENGE v0.6.3 — STABLE FIX-13
+
+KONČNI STABILIZACIJSKI PAKET ZA GITHUB.
+
+Na GitHub prepiši CELOTNO vsebino paketa. Ne dodajaj nobene stare AI FIX datoteke.
+
+Ključni popravki:
+- ena sama aktivna AI Challenge datoteka: arena-v063-ai-challenge.js;
+- KDO ZAČNE: oba vržeta 4 kocke, nižji seštevek začne;
+- če začne AI, AI odigra svojo R1 pred igralcem;
+- timer teče samo med igralčevo rundo: Classic 40 s, Extended 45 s, Pro 50 s, Master 60 s;
+- po dejanskem koncu igralčeve runde AI odigra isto rundo;
+- zaščita pred podvojenim AI zagonom med asinhronim prikazom;
+- NASLEDNJA RUNDA se pokaže šele po koncu AI;
+- brez fantomske dodatne runde;
+- končni rezultat se pokaže šele, ko imata igralec in AI vse runde; nižji rezultat zmaga;
+- igralno ime se sinhronizira v AI tabelo;
+- Solo / Invite / Arena / v0.6.1 / v0.6.2 ostanejo vključeni.
+
+Po commitu počakaj 1–3 minute in naredi Ctrl+F5.
