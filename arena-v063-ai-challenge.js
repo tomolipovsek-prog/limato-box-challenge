@@ -1,4 +1,4 @@
-/* LiMATO Box Challenge v0.6.3 — AI CHALLENGE — START ROLL + PLAYER NAME FIX
+/* LiMATO Box Challenge v0.6.3 — AI CHALLENGE — FIX-15 START BUTTON FLOW
    Additive patch: keeps Solo / Invite / Arena / Hard Mode intact.
    AI opponent uses the same Box, rounds, dice-change penalties and scoring rules.
 */
@@ -500,7 +500,15 @@ function bootAIChallenge(){
     tries++;
     if($("playMode")){
       clearInterval(timer);injectUI();syncMode();renderAI();
-      console.info("LiMATO Box Challenge v0.6.3 AI Challenge FIX-14 SINGLE FLOW mounted");
+
+      // FIX-15: the core attached these buttons before this patch loaded.
+      // Rebind them to the NEW AI-aware startMatch controller; otherwise
+      // clicking START/NEW still calls the old core startMatch and skips
+      // opening roll, timer and the visible AI turn.
+      if($("start")) $("start").onclick=()=>startMatch();
+      if($("new")) $("new").onclick=()=>startMatch();
+
+      console.info("LiMATO Box Challenge v0.6.3 AI Challenge FIX-15 START BUTTON FLOW mounted");
     }else if(tries>=100){
       clearInterval(timer);
       console.warn("LiMATO AI Challenge: #playMode was not created in time.");
@@ -508,5 +516,5 @@ function bootAIChallenge(){
   },100);
 }
 bootAIChallenge();
-console.info("LiMATO Box Challenge v0.6.3 AI Challenge FIX-14 SINGLE FLOW loaded");
+console.info("LiMATO Box Challenge v0.6.3 AI Challenge FIX-15 START BUTTON FLOW loaded");
 })();

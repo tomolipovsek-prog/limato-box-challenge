@@ -1,0 +1,23 @@
+LiMATO Box Challenge v0.6.3 — FIX-15 START BUTTON FLOW
+
+NA GITHUB PREPIŠI SAMO:
+1. arena-v063-ai-challenge.js
+
+Zakaj FIX-14 na zaslonu ni sprožil dogovorjenega toka:
+- FIX-14 je imel kodo za začetni met, odštevalnik in vidni AI met,
+  vendar je gumb ZAČNI TEKMO še vedno držal staro funkcijo startMatch.
+- Zato se je prikazal AI vmesnik, dejanski AI krmilnik tekme pa se ob kliku ni zagnal.
+
+FIX-15:
+- gumb ZAČNI TEKMO veže na novi AI-aware startMatch;
+- gumb NOVA TEKMA veže na isti novi tok;
+- ohrani FIX-14 logiko;
+- začetni met KDO ZAČNE se mora zdaj dejansko sprožiti;
+- če začne AI, mora odigrati vidno/virtualno potezo na istem Boxu;
+- če je na potezi igralec, se mora zagnati odštevalnik;
+- ob AI potezi je igralčev odštevalnik ustavljen.
+
+Po uploadu:
+- Commit changes.
+- Počakaj približno minuto na GitHub Pages.
+- Ctrl+F5.
