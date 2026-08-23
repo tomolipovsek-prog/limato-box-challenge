@@ -1,0 +1,6 @@
+LiMATO Box Challenge v0.6.5
+
+V paketu:
+- arena-v065-ai-challenge.js
+
+Najprej testiraj eno tekmo s 3 rundami.
