@@ -1,0 +1,30 @@
+LiMATO BOX CHALLENGE v0.6.4 — CLEAN CORE
+
+To ni nov obliž čez FIX-17. CLEAN CORE je narejen iz že poslane kode.
+
+GLAVNI POPRAVKI
+- Timer NE briše več originalnega panela Rezultati.
+- Rezultati, Skupaj in Osebni rekord ostanejo v DOM-u.
+- Timer se vstavi kot ločen element nad rezultate.
+- Timer velja tudi za samostojni/trening način (Arena obdrži svoj online timer).
+- Pri AI se človeški timer ustavi, ko igra AI, in ponovno začne, ko je na potezi človek.
+- Začetni met 4 + 4 dejansko določi vrstni red.
+- Če začne AI, AI svojo rundo odigra PRED človekom.
+- Če začne človek, AI odigra svojo rundo PO človeku.
+- Gumb Naslednja runda ne sme ustvariti fantomske runde po koncu tekme.
+- Obstoječi Hard Mode je ohranjen; spremeni se samo oznaka verzije na 0.6.4.
+
+ZA GITHUB
+Zamenjaj/naloži samo:
+1. index.html
+2. arena-v062-patch.js
+3. arena-v064-clean-core.js
+
+Stare datoteke za zdaj NE briši.
+index.html nove stare AI datoteke arena-v063-ai-challenge.js ne kliče več.
+
+POMEMBNO
+Najprej test:
+A) Samostojno, Classic, 3 runde
+B) Proti AI, Classic, 3 runde
+Šele nato test Extended/Pro/Master in Arena.

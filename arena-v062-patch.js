@@ -3,7 +3,7 @@
 (function(){
   "use strict";
   const q=id=>document.getElementById(id);
-  const V="0.6.3";
+  const V="0.6.4";
   const HARD_PENALTY=2;
   let hardMistakes=0;
 
