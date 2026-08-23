@@ -1,4 +1,4 @@
-/* LiMATO Box Challenge v0.6.3 — AI CHALLENGE
+/* LiMATO Box Challenge v0.6.3 — AI CHALLENGE — START ROLL + PLAYER NAME + MASTER DICE FIX
    Additive patch: keeps Solo / Invite / Arena / Hard Mode intact.
    AI opponent uses the same Box, rounds, dice-change penalties and scoring rules.
 */
@@ -6,27 +6,74 @@
 "use strict";
 const $=id=>document.getElementById(id);
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const randomThinkMs=()=>1000+Math.floor(Math.random()*6001); // AI delay stays hidden: 1–7 s
+async function humanPause(){
+  await sleep(randomThinkMs());
+}
+
+const TURN_SECONDS={9:40,12:45,15:50,18:60};
 const ai={
-  enabled:false, level:"challenger", results:[], roundLogs:[], running:false
+  enabled:false, level:"challenger", results:[], roundLogs:[], running:false,
+  turnTimer:null, turnEndsAt:0, starter:"human"
 };
 
+function turnSeconds(){
+  return TURN_SECONDS[Number(s?.max)] || 40;
+}
+function renderTurnTimer(){
+  const el=$("aiTurnTimer");
+  if(!el)return;
+  if(!ai.enabled || ai.running || !s?.active || !ai.turnEndsAt){
+    el.textContent="--:--";
+    return;
+  }
+  const left=Math.max(0,Math.ceil((ai.turnEndsAt-Date.now())/1000));
+  el.textContent=`00:${String(left).padStart(2,"0")}`;
+  const wrap=$("aiTurnTimerWrap");
+  if(wrap) wrap.style.color=left<=7?"#ff9a9a":"#ffd66d";
+}
+function stopTurnTimer(){
+  if(ai.turnTimer){clearInterval(ai.turnTimer);ai.turnTimer=null;}
+  ai.turnEndsAt=0;
+  renderTurnTimer();
+}
+function startTurnTimer(){
+  stopTurnTimer();
+  if(!ai.enabled || ai.running || !s?.active)return;
+  ai.turnEndsAt=Date.now()+turnSeconds()*1000;
+  renderTurnTimer();
+  ai.turnTimer=setInterval(()=>{
+    renderTurnTimer();
+    if(Date.now()>=ai.turnEndsAt){
+      stopTurnTimer();
+      if(ai.enabled && !ai.running && s?.active){
+        finish("⏱️ Čas je potekel.");
+      }
+    }
+  },200);
+}
+
 function injectUI(){
-  if($("aiChallengeBox")) return;
-  const extras=$("extrasMount");
-  const setup=document.querySelector(".setup");
-  const mount=extras || setup;
-  if(!mount) return;
+  const pm=$("playMode");
+  if(!pm) return;
+
+  if(!pm.querySelector('option[value="ai"]')){
+    const opt=document.createElement("option");
+    opt.value="ai";
+    opt.textContent="🤖 Proti AI";
+    pm.appendChild(opt);
+  }
+
+  const mount=$("extrasMount");
+  if(!mount || $("aiChallengeBox")) return;
+
   const box=document.createElement("section");
-  box.id="aiChallengeBox"; box.className="aiChallengeBox";
+  box.id="aiChallengeBox";
+  box.className="aiChallengeBox";
+  box.hidden=true;
   box.innerHTML=`
     <b>🤖 AI CHALLENGE</b>
     <div class="aiChallengeGrid">
-      <label><span>Način</span>
-        <select id="aiChallengeMode">
-          <option value="off">Samostojno</option>
-          <option value="ai">🤖 Proti AI</option>
-        </select>
-      </label>
       <label><span>Težavnost AI</span>
         <select id="aiLevel">
           <option value="beginner">🟢 Začetnik</option>
@@ -36,26 +83,84 @@ function injectUI(){
       </label>
     </div>
     <div id="aiScoreCard" class="aiScoreCard" hidden>
-      <div class="aiScoreRows">
-        <div>👤 <b id="aiHumanName">Igralec</b><br><strong id="aiHumanTotal">0</strong></div>
-        <div>🤖 <b id="aiOpponentName">LiMATO AI</b><br><strong id="aiOpponentTotal">0</strong></div>
+      <div class="aiScoreRows" style="align-items:stretch">
+        <div style="padding:10px">
+          👤 <b id="aiHumanName">Igralec</b><br><strong id="aiHumanTotal">0</strong>
+          <div style="margin-top:8px;font-weight:800;color:#ffd66d">Rezultati</div>
+          <div id="aiHumanRounds" style="margin-top:5px;line-height:1.6">R1: – &nbsp; R2: – &nbsp; R3: –</div>
+        </div>
+        <div style="padding:10px">
+          🤖 <b id="aiOpponentName">LiMATO AI</b><br><strong id="aiOpponentTotal">0</strong>
+          <div style="margin-top:8px;font-weight:800;color:#ffd66d">Rezultati</div>
+          <div id="aiOpponentRounds" style="margin-top:5px;line-height:1.6">R1: – &nbsp; R2: – &nbsp; R3: –</div>
+        </div>
       </div>
-      <div id="aiRoundInfo" style="margin-top:8px;text-align:center"></div>
+      <div id="aiRoundInfo" style="display:none"></div>
+      <div id="aiStartRoll" style="margin-top:10px;padding:10px;border-radius:10px;background:rgba(0,0,0,.18);text-align:center;font-weight:800" hidden></div>
+      <div id="aiLive" style="margin-top:10px;padding:10px;border-radius:10px;background:rgba(0,0,0,.18);text-align:center;line-height:1.55" hidden></div>
       <div id="aiVerdict" class="aiVerdict"></div>
     </div>`;
-  if(extras){
-    extras.prepend(box);
-  }else{
-    const start=$("start");
-    if(start && start.parentNode===setup) setup.insertBefore(box,start);
-    else setup.appendChild(box);
-  }
-  $("aiChallengeMode").onchange=syncMode;
-  $("aiLevel").onchange=()=>ai.level=$("aiLevel").value;
+  mount.appendChild(box);
+  mountTurnTimerInResultsPanel();
+
+  pm.addEventListener("change",syncMode);
+  $("name")?.addEventListener("input",()=>{
+    if($("aiHumanName")) $("aiHumanName").textContent=$("name").value.trim()||"Igralec";
+  });
+  $("aiLevel").addEventListener("change",()=>{
+    ai.level=$("aiLevel").value;
+    renderAI();
+  });
 }
+
+
+
+function mountTurnTimerInResultsPanel(){
+  if($("aiTurnTimerWrap")) return;
+  const candidates=[...document.querySelectorAll("aside,section,div")];
+  const panel=candidates.find(el=>{
+    const txt=(el.textContent||"").trim();
+    return /^Rezultati\b/.test(txt) && /Runda 1/.test(txt) && /Osebni rekord/.test(txt);
+  });
+  if(!panel)return;
+  panel.innerHTML=`
+    <div id="aiTurnTimerWrap" style="height:100%;min-height:190px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-weight:900;color:#ffd66d">
+      <div style="font-size:18px;margin-bottom:12px">⏱️ ODŠTEVALNIK</div>
+      <div id="aiTurnTimer" style="font-size:44px;line-height:1">--:--</div>
+    </div>`;
+}
+
+
+async function decideWhoStarts(){
+  if(!ai.enabled)return "human";
+  const host=$("aiStartRoll");
+  const human=$("name")?.value.trim()||$("player")?.textContent.trim()||"Igralec";
+  if(host){host.hidden=false;host.innerHTML="🎲 <b>Kdo začne?</b><br>Oba vržeta 4 kocke — nižji seštevek začne.";}
+  let hd,ad,hs,as;
+  do{
+    hd=Array.from({length:4},()=>1+Math.floor(Math.random()*6));
+    ad=Array.from({length:4},()=>1+Math.floor(Math.random()*6));
+    hs=hd.reduce((x,y)=>x+y,0);
+    as=ad.reduce((x,y)=>x+y,0);
+    if(host){
+      host.innerHTML=
+        `🎲 <b>Kdo začne?</b><br>`+
+        `👤 ${human}: ${hd.join(" + ")} = <b>${hs}</b><br>`+
+        `🤖 LiMATO AI: ${ad.join(" + ")} = <b>${as}</b>`+
+        (hs===as?`<br>🤝 Izenačeno — ponovni met…`:"");
+    }
+    if(hs===as) await sleep(1000);
+  }while(hs===as);
+  const starter=hs<as?"human":"ai";
+  if(host) host.innerHTML+=`<br>🏁 Začne: <b>${starter==="human"?human:"LiMATO AI"}</b>`;
+  return starter;
+}
+
 function syncMode(){
-  ai.enabled=$("aiChallengeMode")?.value==="ai";
+  const pm=$("playMode");
+  ai.enabled=pm?.value==="ai";
   ai.level=$("aiLevel")?.value||"challenger";
+  if($("aiChallengeBox")) $("aiChallengeBox").hidden=!ai.enabled;
   if($("aiScoreCard")) $("aiScoreCard").hidden=!ai.enabled;
 }
 function subsets(nums,target){
@@ -72,25 +177,20 @@ function subsets(nums,target){
 function hasCombo(nums,target){return subsets(nums,target).length>0}
 function futureMobility(open){
   let score=0;
-  for(let t=2;t<=18;t++) if(hasCombo(open,t)) score++;
+  for(let t=2;t<=24;t++) if(hasCombo(open,t)) score++;
   return score;
 }
 function chooseMove(open,target,level){
   const opts=subsets(open,target);
   if(!opts.length)return null;
-  if(level==="beginner"){
-    // Beginner often chooses a merely valid option rather than the strategic best.
-    return opts[Math.floor(Math.random()*opts.length)];
-  }
+  if(level==="beginner") return opts[Math.floor(Math.random()*opts.length)];
   const ranked=opts.map(c=>{
     const left=open.filter(n=>!c.includes(n));
-    let value=futureMobility(left)*3 - left.reduce((a,b)=>a+b,0)*.12;
-    // Preserve small flexible numbers; closing high numbers is usually valuable.
-    value += c.reduce((a,b)=>a+b,0)*.08 - c.length*.12;
+    let value=futureMobility(left)*3-left.reduce((a,b)=>a+b,0)*.12;
+    value+=c.reduce((a,b)=>a+b,0)*.08-c.length*.12;
     if(level==="master"){
-      // Look one layer deeper across plausible next totals.
       let next=0;
-      for(let t=2;t<=12;t++){
+      for(let t=2;t<=24;t++){
         const nopts=subsets(left,t);
         if(nopts.length) next+=Math.max(...nopts.map(x=>futureMobility(left.filter(n=>!x.includes(n)))));
       }
@@ -98,89 +198,318 @@ function chooseMove(open,target,level){
     }
     return {c,value};
   }).sort((a,b)=>b.value-a.value);
-  if(level==="challenger" && ranked.length>1 && Math.random()<.18) return ranked[1].c;
+  if(level==="challenger"&&ranked.length>1&&Math.random()<.18)return ranked[1].c;
   return ranked[0].c;
 }
-function defaultDiceFor(max){return ({9:2,12:2,15:3,18:3})[max]||2}
+function defaultDiceFor(max){return ({9:2,12:2,15:3,18:4})[max]||2}
 function maybeChangeDice(open,dice,switches,level){
-  if(switches>=3||level==="beginner") return dice;
-  // Conservative strategy: change only when board has become small.
+  if(switches>=3||level==="beginner")return dice;
   const high=Math.max(0,...open);
-  if(open.length<=4 && dice>1) return dice-1;
-  if(level==="master" && open.length>=8 && high>=13 && dice<3) return dice+1;
+  if(open.length<=4&&dice>1)return dice-1;
+  if(level==="master"&&open.length>=8&&high>=13&&dice<4)return dice+1;
   return dice;
 }
+
 async function playAIRound(max,level){
-  let open=Array.from({length:max},(_,i)=>i+1), penalty=0, switches=0;
-  let dice=defaultDiceFor(max), throws=0, moves=[];
-  while(open.length && throws<80){
+  let open=Array.from({length:max},(_,i)=>i+1),penalty=0,switches=0;
+  let dice=defaultDiceFor(max),throws=0,moves=[];
+  while(open.length&&throws<80){
     const nd=maybeChangeDice(open,dice,switches,level);
-    if(nd!==dice){ penalty += [2,3,4][switches]||0; switches++; dice=nd; }
+    let switchPenalty=0;
+    if(nd!==dice){
+      switchPenalty=[2,3,4][switches]||0;
+      penalty+=switchPenalty; switches++; dice=nd;
+    }
     const vals=Array.from({length:dice},()=>1+Math.floor(Math.random()*6));
     const target=vals.reduce((a,b)=>a+b,0); throws++;
     const move=chooseMove(open,target,level);
-    moves.push({vals,target,move:move?move.slice():null});
-    if(!move) break;
+    moves.push({vals,target,move:move?move.slice():null,dice,switchPenalty,openBefore:open.slice()});
+    if(!move)break;
     open=open.filter(n=>!move.includes(n));
   }
-  return {score:open.reduce((a,b)=>a+b,0)+penalty, penalty, throws, open, moves};
+  return {score:open.reduce((a,b)=>a+b,0)+penalty,penalty,throws,open,moves};
 }
+
 function levelName(){return ai.level==="beginner"?"🟢 Začetnik":ai.level==="master"?"🔴 Mojster":"🟡 Izzivalec"}
 function renderAI(){
   if(!$("aiScoreCard"))return;
   $("aiScoreCard").hidden=!ai.enabled;
   if(!ai.enabled)return;
-  $("aiHumanName").textContent=$("name")?.value.trim()||"Igralec";
+  $("aiHumanName").textContent=$("name")?.value.trim()||$("player")?.textContent.trim()||"Igralec";
   $("aiOpponentName").textContent="LiMATO AI "+levelName();
   $("aiHumanTotal").textContent=(typeof s!=="undefined"&&Array.isArray(s.results))?s.results.reduce((a,b)=>a+b,0):0;
   $("aiOpponentTotal").textContent=ai.results.reduce((a,b)=>a+b,0);
-  const pairs=ai.results.map((v,i)=>`R${i+1}: 👤 ${s.results[i]??"–"} / 🤖 ${v}`).join(" • ");
-  $("aiRoundInfo").textContent=pairs;
+  const rounds=(typeof s!=="undefined"&&s.rounds)?s.rounds:3;
+  const humanRounds=Array.from({length:rounds},(_,i)=>`R${i+1}: ${s.results[i]??"–"}`).join(" &nbsp; • &nbsp; ");
+  const aiRounds=Array.from({length:rounds},(_,i)=>`R${i+1}: ${ai.results[i]??"–"}`).join(" &nbsp; • &nbsp; ");
+  if($("aiHumanRounds")) $("aiHumanRounds").innerHTML=humanRounds;
+  if($("aiOpponentRounds")) $("aiOpponentRounds").innerHTML=aiRounds;
+}
+
+function setLiveBase(html){
+  const live=$("aiLive"); if(!live)return;
+  live.dataset.base=html; live.innerHTML=html;
+}
+function flashAICloseButton(on){
+  const b=$("close"); if(!b)return;
+  if(on){
+    if(!b.dataset.aiOldStyle) b.dataset.aiOldStyle=b.getAttribute("style")||"";
+    b.disabled=true;
+    b.style.setProperty("background","#ffffff","important");
+    b.style.setProperty("color","#21152f","important");
+    b.style.setProperty("border-color","#ffffff","important");
+    b.style.setProperty("opacity","1","important");
+    b.style.setProperty("box-shadow","0 0 16px rgba(255,255,255,.45)","important");
+  }else{
+    const old=b.dataset.aiOldStyle;
+    if(old!==undefined){
+      if(old) b.setAttribute("style",old); else b.removeAttribute("style");
+      delete b.dataset.aiOldStyle;
+    }
+    b.disabled=true;
+  }
+}
+
+async function showAIRound(roundIndex,r){
+  const live=$("aiLive");
+  if(!live)return;
+
+  // AI temporarily uses the SAME visible Box as the player.
+  // Human state in `s` is not changed; after AI finishes we redraw the human board.
+  const renderAITiles=open=>{
+    const host=$("tiles");
+    if(!host)return;
+    host.innerHTML="";
+    for(let n=1;n<=s.max;n++){
+      const e=document.createElement("div");
+      e.className="tile "+(open.includes(n)?"open":"closed");
+      e.textContent=n;
+      host.appendChild(e);
+    }
+  };
+  const restoreHumanBoard=()=>{
+    renderTiles();
+    $("dice").innerHTML="";
+    $("target").textContent=s.target??"–";
+    $("selected").textContent=sum(s.sel||[]);
+    update();
+  };
+
+  live.hidden=false;
+  setLiveBase(`🤖 <b>LiMATO AI — runda ${roundIndex+1}</b><br>🧠 Razmišlja…`);
+  if($("ai")) $("ai").textContent="🤖 LiMATO AI razmišlja…";
+  await humanPause();
+
+  for(let i=0;i<r.moves.length;i++){
+    const m=r.moves[i];
+
+    if(m.switchPenalty){
+      setLiveBase(`🤖 <b>LiMATO AI — runda ${roundIndex+1}</b><br>🔄 Zamenja število kock na <b>${m.dice}</b> &nbsp; (+${m.switchPenalty} pribitka)`);
+      $("diceCount").textContent=m.dice;
+      $("penalty").textContent=m.switchPenalty;
+      await humanPause();
+    }
+
+    // 1) Show AI's open numbers on the real Box.
+    renderAITiles(m.openBefore);
+    $("target").textContent="–";
+    $("selected").textContent="0";
+    $("score").textContent=m.openBefore.reduce((a,b)=>a+b,0);
+    $("dice").innerHTML="";
+    setLiveBase(`🤖 <b>LiMATO AI — met ${i+1}</b><br>🎲 Meče kocke…`);
+    if($("ai")) $("ai").textContent=`🤖 LiMATO AI meče — met ${i+1}`;
+    await humanPause();
+
+    // 2) The dice visibly roll/fall into the SAME dice area as the player's dice.
+    showDice(m.vals);
+    await sleep(900); // existing cube animation is ~820 ms
+    $("target").textContent=m.target;
+    setLiveBase(`🤖 <b>LiMATO AI — met ${i+1}</b><br>🎲 ${m.vals.join(" + ")} = <b>${m.target}</b><br>🧠 Razmišlja…`);
+    if($("ai")) $("ai").textContent=`🤖 AI je vrgel: ${m.vals.join(" + ")} = ${m.target}`;
+    await humanPause();
+
+    if(m.move){
+      // 3) Mark AI's chosen tiles, then close them visibly one by one.
+      const tiles=[...document.querySelectorAll("#tiles .tile")];
+      m.move.forEach(n=>tiles[n-1]?.classList.add("selected"));
+      $("selected").textContent=m.move.reduce((a,b)=>a+b,0);
+      setLiveBase(`🤖 <b>LiMATO AI — met ${i+1}</b><br>🧠 Izbere: <b>${m.move.join(" + ")}</b>`);
+      if($("ai")) $("ai").textContent=`🤖 AI zapira: ${m.move.join(" + ")}`;
+      flashAICloseButton(true);
+      await humanPause("Zapiram");
+
+      let after=m.openBefore.slice();
+      for(const n of m.move){
+        after=after.filter(x=>x!==n);
+        renderAITiles(after);
+        $("score").textContent=after.reduce((a,b)=>a+b,0);
+        await sleep(350);
+      }
+      $("selected").textContent="0";
+      $("target").textContent="–";
+      $("dice").innerHTML="";
+      flashAICloseButton(false);
+      await humanPause("Naslednja poteza");
+    }else{
+      setLiveBase(`${live.dataset.base||live.innerHTML}<br>⛔ Ni veljavne kombinacije. Runda je končana.`);
+      if($("ai")) $("ai").textContent="🤖 AI nima veljavne kombinacije";
+      await humanPause();
+    }
+  }
+
+  setLiveBase(`🤖 <b>LiMATO AI — konec runde ${roundIndex+1}</b><br>Rezultat: <b>${r.score}</b>${r.penalty?` &nbsp; (pribitek ${r.penalty})`:""}`);
+  if($("ai")) $("ai").textContent=`🤖 AI R${roundIndex+1}: ${r.score}`;
+  await humanPause("Konec runde");
+  flashAICloseButton(false);
+  restoreHumanBoard();
 }
 async function runAIForHumanRound(roundIndex){
   if(!ai.enabled||ai.running||ai.results.length>roundIndex)return;
   ai.running=true;
   if($("ai")) $("ai").textContent="🤖 LiMATO AI razmišlja…";
-  await sleep(450);
   const r=await playAIRound(s.max,ai.level);
-  ai.results[roundIndex]=r.score; ai.roundLogs[roundIndex]=r;
-  ai.running=false; renderAI();
-  if($("ai")) $("ai").textContent=`🤖 AI R${roundIndex+1}: ${r.score}`;
-}
-function finalVerdict(){
-  if(!ai.enabled||ai.results.length!==s.rounds)return;
-  const h=s.results.reduce((a,b)=>a+b,0), a=ai.results.reduce((x,y)=>x+y,0);
-  $("aiVerdict").textContent=h<a?`🏆 Zmagaš! ${h} : ${a}`:h>a?`🤖 AI zmaga ${a} : ${h}`:`🤝 Neodločeno ${h} : ${a}`;
-}
-function resetAI(){
-  syncMode(); ai.results=[]; ai.roundLogs=[]; ai.running=false;
-  if($("aiVerdict")) $("aiVerdict").textContent="";
-  if($("aiRoundInfo")) $("aiRoundInfo").textContent="";
+  await showAIRound(roundIndex,r);
+  ai.results[roundIndex]=r.score;
+  ai.roundLogs[roundIndex]=r;
+  ai.running=false;
   renderAI();
 }
 
-// Wrap existing core without replacing it.
-const oldStart=startMatch;
-startMatch=function(){
-  resetAI();
-  oldStart();
-  if(ai.enabled){ $("aiScoreCard").hidden=false; renderAI(); }
-};
-const oldFinish=finish;
-finish=function(reason){
-  const before=s.results.length;
-  const ret=oldFinish(reason);
-  const idx=before;
-  if(ai.enabled && s.results.length>before){
-    runAIForHumanRound(idx).then(()=>{renderAI(); if(!s.active) finalVerdict();});
+function resetAI(){
+  stopTurnTimer();
+  syncMode(); ai.results=[]; ai.roundLogs=[]; ai.running=false; ai.starter="human";
+  if($("aiStartRoll")){$("aiStartRoll").hidden=true;$("aiStartRoll").innerHTML="";}
+  if($("aiVerdict"))$("aiVerdict").textContent="";
+  if($("aiRoundInfo"))$("aiRoundInfo").textContent="";
+  if($("aiLive")){$("aiLive").textContent="";$("aiLive").hidden=true;}
+  renderAI();
+}
+
+// --- Stable event/state bridge -------------------------------------------------
+// v0.6.0/v0.6.1 install their own click handlers after the core.  Instead of
+// depending on replacing startMatch/finish, observe the real core state `s`.
+let humanRoundBusy=false;
+let seenHumanResults=0;
+let stateWatch=null;
+
+function setHumanControlsLocked(locked){
+  ["roll","close","change","diceChoice"].forEach(id=>{
+    const el=$(id); if(el) el.disabled=!!locked;
+  });
+}
+
+function humanName(){
+  return $("name")?.value.trim() || $("player")?.textContent.trim() || "Igralec";
+}
+
+async function beginAIHumanMatch(){
+  if(!ai.enabled || !s?.active || humanRoundBusy) return;
+  humanRoundBusy=true;
+  seenHumanResults=s.results.length;
+  ai.results=[]; ai.roundLogs=[]; ai.running=false;
+  renderAI();
+
+  // KDO ZAČNE is a real opening phase. Human controls stay locked until it ends.
+  stopTurnTimer();
+  setHumanControlsLocked(true);
+  ai.starter=await decideWhoStarts();
+
+  if(ai.starter==="ai"){
+    ai.running=true;
+    const r=await playAIRound(s.max,ai.level);
+    await showAIRound(0,r);
+    ai.results[0]=r.score; ai.roundLogs[0]=r;
+    ai.running=false; renderAI();
   }
-  return ret;
-};
-const oldNext=nextRound;
-nextRound=function(){
-  if(ai.enabled && ai.running){ setMsg("🤖 AI še zaključuje svojo rundo…"); return; }
-  oldNext();
-};
-injectUI(); syncMode(); renderAI();
-console.info("LiMATO Box Challenge v0.6.3 AI Challenge loaded");
+
+  // Human now gets the same round. Restore exactly the controls valid at its start.
+  if(s.active && s.results.length===0){
+    $("roll").disabled=false;
+    $("close").disabled=true;
+    $("change").disabled=s.switches>=3;
+    $("diceChoice").disabled=s.switches>=3;
+    startTurnTimer();
+  }
+  humanRoundBusy=false;
+}
+
+async function onHumanRoundFinished(idx){
+  if(!ai.enabled || ai.running) return;
+  stopTurnTimer();
+  // If AI opened round 1, its R1 is already recorded.
+  if(ai.results[idx] == null){
+    ai.running=true; setHumanControlsLocked(true);
+    const r=await playAIRound(s.max,ai.level);
+    await showAIRound(idx,r);
+    ai.results[idx]=r.score; ai.roundLogs[idx]=r;
+    ai.running=false; renderAI();
+  }
+
+  // Core exposes NEXT only after the human round. Keep it usable after AI finishes.
+  if(s.active && s.round<s.rounds){
+    $("next").hidden=false;
+  }else{
+    $("next").hidden=true;
+    stopTurnTimer();
+  }
+}
+
+function pollAIState(){
+  if(!ai.enabled) return;
+  renderAI();
+
+  // Core appended a human score => the human round really ended (including NO MOVE).
+  if(s.results.length>seenHumanResults){
+    const from=seenHumanResults;
+    seenHumanResults=s.results.length;
+    for(let i=from;i<s.results.length;i++) onHumanRoundFinished(i);
+  }
+}
+
+function installStableBridge(){
+  if(stateWatch) return;
+  stateWatch=setInterval(pollAIState,120);
+
+  // Start/new: let the core create the match first, then run opening roll.
+  ["start","new"].forEach(id=>$(id)?.addEventListener("click",()=>{
+    setTimeout(()=>{
+      syncMode();
+      if(ai.enabled && s?.active){ resetAI(); beginAIHumanMatch(); }
+    },0);
+  }));
+
+  // NEXT: the core has already advanced to the new human round.
+  $("next")?.addEventListener("click",()=>setTimeout(()=>{
+    if(!ai.enabled || !s?.active) return;
+    renderAI();
+    startTurnTimer();
+  },0));
+
+  // Keep timer honest: it starts when a human round is playable, not while dice animate.
+  $("roll")?.addEventListener("click",()=>{
+    if(ai.enabled && s?.active && !ai.running && !ai.turnEndsAt) startTurnTimer();
+  },true);
+}
+
+function bootAIChallenge(){
+  let tries=0;
+  const timer=setInterval(()=>{
+    tries++;
+    if($("playMode")){
+      clearInterval(timer);injectUI();syncMode();renderAI();installStableBridge();
+            if($("name")){
+        const syncHumanName=()=>{if($("aiHumanName")) $("aiHumanName").textContent=$("name").value.trim()||$("player")?.textContent.trim()||"Igralec";};
+        $("name").addEventListener("input",syncHumanName);
+        $("name").addEventListener("change",syncHumanName);
+        syncHumanName();
+      }
+      console.info("LiMATO Box Challenge v0.6.3 AI Challenge STABLE FIX-12 mounted");
+    }else if(tries>=100){
+      clearInterval(timer);
+      console.warn("LiMATO AI Challenge: #playMode was not created in time.");
+    }
+  },100);
+}
+bootAIChallenge();
+console.info("LiMATO Box Challenge v0.6.3 AI Challenge STABLE FIX-12 loaded");
 })();

@@ -1,0 +1,23 @@
+LiMATO BOX CHALLENGE v0.6.3 — STABLE FIX-12
+
+NA GITHUB:
+- najvarneje je prepisati istoimenske datoteke s celotnim paketom FIX-12;
+- ničesar iz starega repozitorija ni treba ročno brisati;
+- novih Supabase migracij za FIX-12 ni.
+
+GLAVNI POPRAVEK FIX-12:
+- Master 1–18 v osnovni igri uporablja 4 kocke;
+- AI Challenge je zdaj usklajen in tudi AI Master začne s 4 kockami;
+- AI kombinacije/strategija upoštevajo vsote do 24.
+
+OHRANJENO IZ FIX-11:
+- začetni met KDO ZAČNE;
+- AI lahko začne prvo rundo;
+- timer velja za celo igralčevo rundo;
+- samodejni prehod človek → AI;
+- pravilni prehodi med rundami;
+- brez fantomske dodatne runde;
+- sinhronizirano igralno ime;
+- brez nepotrebnega končnega besedila o zmagovalcu.
+
+Po commitu počakaj GitHub Pages in naredi Ctrl+F5.
