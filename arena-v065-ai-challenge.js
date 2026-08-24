@@ -1,4 +1,4 @@
-/* LiMATO Box Challenge v0.6.5 — AI CHALLENGE — START ROLL + PLAYER NAME FIX
+/* LiMATO Box Challenge v0.6.6 — AI CHALLENGE — STATE / ROUND FLOW FIX
    Additive patch: keeps Solo / Invite / Arena / Hard Mode intact.
    AI opponent uses the same Box, rounds, dice-change penalties and scoring rules.
 */
@@ -117,18 +117,15 @@ function injectUI(){
 
 function mountTurnTimerInResultsPanel(){
   if($("aiTurnTimerWrap")) return;
-  const candidates=[...document.querySelectorAll("aside,section,div")];
-  const panel=candidates.find(el=>{
-    const txt=(el.textContent||"").trim();
-    return /^Rezultati\b/.test(txt) && /Runda 1/.test(txt) && /Osebni rekord/.test(txt);
-  });
-  if(!panel)return;
-  panel.innerHTML=`
-    <div id="aiTurnTimerWrap" style="height:100%;min-height:190px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-weight:900;color:#ffd66d">
-      <div style="font-size:18px;margin-bottom:12px">⏱️ ODŠTEVALNIK</div>
-      <div id="aiTurnTimer" style="font-size:44px;line-height:1">--:--</div>
-    </div>`;
+  const results=$("results");
+  if(!results || !results.parentElement) return;
+  const wrap=document.createElement("div");
+  wrap.id="aiTurnTimerWrap";
+  wrap.style.cssText="margin:8px 0 10px;padding:10px;border:1px solid rgba(255,214,109,.45);border-radius:12px;text-align:center;font-weight:900;color:#ffd66d";
+  wrap.innerHTML=`<div style="font-size:14px;margin-bottom:5px">⏱️ ODŠTEVALNIK</div><div id="aiTurnTimer" style="font-size:28px;line-height:1">--:--</div>`;
+  results.parentElement.insertBefore(wrap,results);
 }
+
 
 
 async function decideWhoStarts(){
@@ -270,6 +267,21 @@ function flashAICloseButton(on){
   }
 }
 
+function humanRoundSnapshot(){
+  return {
+    open:Array.isArray(s.open)?s.open.slice():[], sel:Array.isArray(s.sel)?s.sel.slice():[],
+    target:s.target, dice:s.dice, penalty:s.penalty, rolled:s.rolled, rolling:s.rolling,
+    switches:s.switches, perfect:s.perfect
+  };
+}
+function restoreHumanSnapshot(h){
+  if(!h)return;
+  s.open=h.open.slice(); s.sel=h.sel.slice(); s.target=h.target; s.dice=h.dice;
+  s.penalty=h.penalty; s.rolled=h.rolled; s.rolling=h.rolling;
+  s.switches=h.switches; s.perfect=h.perfect;
+  renderTiles(); $("dice").innerHTML=""; update(); renderResults();
+}
+
 async function showAIRound(roundIndex,r){
   const live=$("aiLive");
   if(!live)return;
@@ -367,6 +379,7 @@ async function runAIForHumanRound(roundIndex){
   if(!ai.enabled || ai.running || ai.results[roundIndex] !== undefined) return;
   ai.running=true;
   stopTurnTimer();
+  const humanState=humanRoundSnapshot();
   // During AI play the human cannot accidentally advance or throw.
   if($("roll")) $("roll").disabled=true;
   if($("close")) $("close").disabled=true;
@@ -380,6 +393,7 @@ async function runAIForHumanRound(roundIndex){
     ai.results[roundIndex]=r.score;
     ai.roundLogs[roundIndex]=r;
   } finally {
+    restoreHumanSnapshot(humanState);
     ai.running=false;
     renderAI();
   }
@@ -417,12 +431,10 @@ startMatch=async function(){
   ai.starter=await decideWhoStarts();
   renderAI();
 
-  // The draw now really controls who plays first.
+  // If AI won the start roll, AI always plays first in every round.
   if(ai.starter==="ai"){
     await runAIForHumanRound(0);
-    // AI used the visible board only for animation; reset a clean human R1.
-    startRound();
-    renderResults();
+    restoreHumanSnapshot(humanRoundSnapshot());
   }
   if(s.active) startTurnTimer();
 };
@@ -436,10 +448,11 @@ finish=function(reason){
 
   if(ai.enabled && s.results.length>before){
     renderAI();
-    // Base game reveals NEXT immediately. Hide it until AI has finished the same round.
     if($("next")) $("next").hidden=true;
     (async()=>{
-      await runAIForHumanRound(idx);
+      // Human-first match: AI answers after the human in the same round.
+      // AI-first match: its result for this round already exists.
+      if(ai.results[idx]===undefined) await runAIForHumanRound(idx);
       renderAI();
       const humanDone=s.results.length>=s.rounds;
       const aiDone=ai.results.filter(v=>v!==undefined).length>=s.rounds;
@@ -456,13 +469,12 @@ finish=function(reason){
 };
 
 const oldNext=nextRound;
-nextRound=function(){
+nextRound=async function(){
   if(ai.enabled&&ai.running){setMsg("🤖 AI še zaključuje svojo rundo…");return;}
   if(!s.active||s.round>=s.rounds){
     if($("next")) $("next").hidden=true;
     return;
   }
-  // Do not advance until both sides have a result for the current round.
   const currentIndex=s.round-1;
   if(ai.enabled && ai.results[currentIndex]===undefined){
     setMsg("🤖 Najprej mora LiMATO AI zaključiti to rundo.");
@@ -470,16 +482,24 @@ nextRound=function(){
   }
   oldNext();
   renderAI();
+
+  // In an AI-first match, AI must also open R2/R3/... before the human.
+  const newIndex=s.round-1;
+  if(ai.enabled && ai.starter==="ai" && ai.results[newIndex]===undefined){
+    if($("next")) $("next").hidden=true;
+    await runAIForHumanRound(newIndex);
+    renderAI();
+  }
   if(ai.enabled && s.active) startTurnTimer();
 };
 
-// Block stale/original button handlers and route NEXT through the v0.6.5 wrapper.
+// One and only one NEXT route. Capture phase blocks stale handlers from the core/older patches.
 document.addEventListener("click",e=>{
   const b=e.target.closest?.("#next");
   if(!b)return;
   e.preventDefault();
   e.stopImmediatePropagation();
-  nextRound();
+  void nextRound();
 },true);
 
 function bootAIChallenge(){
@@ -497,7 +517,7 @@ function bootAIChallenge(){
         $("name").addEventListener("change",syncHumanName);
         syncHumanName();
       }
-      console.info("LiMATO Box Challenge v0.6.5 AI Challenge ROUND SYNC FIX mounted");
+      console.info("LiMATO Box Challenge v0.6.6 AI Challenge STATE / ROUND FLOW FIX mounted");
     }else if(tries>=100){
       clearInterval(timer);
       console.warn("LiMATO AI Challenge: #playMode was not created in time.");
@@ -505,5 +525,5 @@ function bootAIChallenge(){
   },100);
 }
 bootAIChallenge();
-console.info("LiMATO Box Challenge v0.6.5 AI Challenge ROUND SYNC FIX loaded");
+console.info("LiMATO Box Challenge v0.6.6 AI Challenge STATE / ROUND FLOW FIX loaded");
 })();

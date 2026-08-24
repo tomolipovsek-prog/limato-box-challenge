@@ -1,0 +1,7 @@
+LiMATO Box Challenge v0.6.6 FIX
+
+1. Na GitHubu zamenjaj SAMO datoteko: arena-v065-ai-challenge.js
+2. Ime datoteke ostane arena-v065-ai-challenge.js, zato index.html NI treba spreminjati.
+3. Po objavi naredi osvežitev strani (Ctrl+F5).
+
+Popravki: stanje igralca/AI, rezultat runde, prehod rund, AI-first vrstni red, NEXT handler, odštevalnik ne briše panela Rezultati.
