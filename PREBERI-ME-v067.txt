@@ -1,0 +1,23 @@
+LiMATO Box Challenge v0.6.7 — ROUND + TIMER STABILITY FIX
+
+Na GitHub zamenjaj SAMO ti 2 datoteki:
+1. index.html
+2. arena-v064-clean-core.js
+
+Kaj je popravljeno:
+- SOLO: odštevalnik se ob koncu runde vedno ustavi.
+- SOLO: NASLEDNJA RUNDA vedno začne nov odštevalnik od polnega časa.
+- SOLO: stanje prejšnje runde se ne sme prenesti zaradi starega NEXT handlerja.
+- AI: odštevalnik je viden tudi med AI potezo.
+- AI: po AI potezi se igralčev odštevalnik začne na novo od polnega časa.
+- AI: en sam NEXT tok prepreči dvojne/stare prehode rund.
+- ob koncu tekme se odštevalnik ustavi.
+
+Časi:
+Classic 1–9 = 40 s
+Extended 1–12 = 45 s
+Pro 1–15 = 50 s
+Master 1–18 = 60 s
+
+Po uploadu počakaj na GitHub Pages in naredi Ctrl+F5.
+Najprej test: SOLO 3 runde, nato PROTI AI 3 runde.

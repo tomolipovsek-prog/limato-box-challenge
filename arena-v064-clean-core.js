@@ -1,4 +1,4 @@
-/* LiMATO Box Challenge v0.6.4 — CLEAN CORE AI CONTROLLER
+/* LiMATO Box Challenge v0.6.7 — ROUND + TIMER STABILITY FIX
    Additive patch: keeps Solo / Invite / Arena / Hard Mode intact.
    AI opponent uses the same Box, rounds, dice-change penalties and scoring rules.
 */
@@ -14,7 +14,7 @@ async function humanPause(){
 const TURN_SECONDS={9:40,12:45,15:50,18:60};
 const ai={
   enabled:false, level:"challenger", results:[], roundLogs:[], running:false,
-  turnTimer:null, turnEndsAt:0, starter:"human"
+  turnTimer:null, turnEndsAt:0, timerOwner:null, starter:"human"
 };
 
 function turnSeconds(){
@@ -23,7 +23,7 @@ function turnSeconds(){
 function renderTurnTimer(){
   const el=$("aiTurnTimer");
   if(!el)return;
-  if(ai.running || !s?.active || !ai.turnEndsAt){
+  if((!s?.active && ai.timerOwner!=="ai") || !ai.turnEndsAt){
     el.textContent="--:--";
     return;
   }
@@ -35,19 +35,26 @@ function renderTurnTimer(){
 function stopTurnTimer(){
   if(ai.turnTimer){clearInterval(ai.turnTimer);ai.turnTimer=null;}
   ai.turnEndsAt=0;
+  ai.timerOwner=null;
   renderTurnTimer();
 }
-function startTurnTimer(){
+function startTurnTimer(owner="human"){
   stopTurnTimer();
-  if(ai.running || !s?.active || $("playMode")?.value==="arena")return;
+  if($("playMode")?.value==="arena" || (owner==="human" && !s?.active))return;
+  ai.timerOwner=owner;
   ai.turnEndsAt=Date.now()+turnSeconds()*1000;
   renderTurnTimer();
   ai.turnTimer=setInterval(()=>{
     renderTurnTimer();
     if(Date.now()>=ai.turnEndsAt){
-      stopTurnTimer();
-      if(!ai.running && s?.active){
+      const owner=ai.timerOwner;
+      if(ai.turnTimer){clearInterval(ai.turnTimer);ai.turnTimer=null;}
+      ai.turnEndsAt=0;
+      ai.timerOwner=null;
+      if(owner==="human" && !ai.running && s?.active){
         finish("⏱️ Čas je potekel.");
+      }else{
+        const el=$("aiTurnTimer"); if(el) el.textContent="00:00";
       }
     }
   },200);
@@ -361,14 +368,16 @@ async function showAIRound(roundIndex,r){
   restoreHumanBoard();
 }
 async function runAIForHumanRound(roundIndex){
-  if(!ai.enabled||ai.running||ai.results.length>roundIndex)return;
+  if(!ai.enabled||ai.running||ai.results[roundIndex]!==undefined)return;
   ai.running=true;
+  startTurnTimer("ai");
   if($("ai")) $("ai").textContent="🤖 LiMATO AI razmišlja…";
   const r=await playAIRound(s.max,ai.level);
   await showAIRound(roundIndex,r);
   ai.results[roundIndex]=r.score;
   ai.roundLogs[roundIndex]=r;
   ai.running=false;
+  stopTurnTimer();
   renderAI();
 }
 
@@ -403,17 +412,14 @@ startMatch=async function(){
     ai.starter=await decideWhoStarts();
     renderAI();
     if(ai.starter==="ai"){
-      ai.running=true;
-      const r=await playAIRound(s.max,ai.level);
-      await showAIRound(0,r);
-      ai.results[0]=r.score; ai.roundLogs[0]=r; ai.running=false; renderAI();
+      await runAIForHumanRound(0);
     }
   }
-  if(s.active) startTurnTimer();
+  if(s.active) startTurnTimer("human");
 };
 const oldFinish=finish;
 finish=function(reason){
-  if(ai.enabled) stopTurnTimer();
+  stopTurnTimer();
   const before=s.results.length;
   const ret=oldFinish(reason);
   const idx=before;
@@ -425,38 +431,34 @@ finish=function(reason){
   return ret;
 };
 const oldNext=nextRound;
-nextRound=function(){
+nextRound=async function(){
   if(ai.enabled&&ai.running){setMsg("🤖 AI še zaključuje svojo rundo…");return;}
-  // Never allow a phantom round (e.g. 3/4 after a 3-round match).
   if(!s.active||s.round>=s.rounds){
-    $("next").hidden=true;
+    if($("next")) $("next").hidden=true;
     return;
   }
-  oldNext();
-  if(!s.active)return;
   stopTurnTimer();
-  if(ai.enabled && ai.starter==="ai"){
-    const idx=s.round-1;
-    ai.running=true;
-    playAIRound(s.max,ai.level).then(async r=>{
-      await showAIRound(idx,r);
-      ai.results[idx]=r.score; ai.roundLogs[idx]=r; ai.running=false; renderAI();
-      if(s.active) startTurnTimer();
-    });
-  }else startTurnTimer();
+  oldNext();
+  renderAI();
+  if(!s.active)return;
+
+  const idx=s.round-1;
+  if(ai.enabled && ai.starter==="ai" && ai.results[idx]===undefined){
+    if($("next")) $("next").hidden=true;
+    await runAIForHumanRound(idx);
+    renderAI();
+  }
+  if(s.active) startTurnTimer("human");
 };
 
-// The original button may still hold the old function reference.
-// Capture the click first and block it while AI is playing or when the match is already over.
+// En sam NEXT tok. Prestrezanje v capture fazi prepreči starim handlerjem,
+// da bi rundo povečali brez ponovnega zagona odštevalnika.
 document.addEventListener("click",e=>{
   const b=e.target.closest?.("#next");
   if(!b)return;
-  if((ai.enabled&&ai.running)||!s.active||s.round>=s.rounds){
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    if(ai.enabled&&ai.running)setMsg("🤖 AI še zaključuje svojo rundo…");
-    else b.hidden=true;
-  }
+  e.preventDefault();
+  e.stopImmediatePropagation();
+  void nextRound();
 },true);
 
 function bootAIChallenge(){
@@ -467,13 +469,14 @@ function bootAIChallenge(){
       clearInterval(timer);injectUI();syncMode();renderAI();mountTurnTimerInResultsPanel();
       if($("start")) $("start").onclick=()=>startMatch();
       if($("new")) $("new").onclick=()=>startMatch();
+      if($("next")) $("next").onclick=()=>nextRound();
       if($("name")){
         const syncHumanName=()=>{if($("aiHumanName")) $("aiHumanName").textContent=$("name").value.trim()||$("player")?.textContent.trim()||"Igralec";};
         $("name").addEventListener("input",syncHumanName);
         $("name").addEventListener("change",syncHumanName);
         syncHumanName();
       }
-      console.info("LiMATO Box Challenge v0.6.4 CLEAN CORE mounted");
+      console.info("LiMATO Box Challenge v0.6.7 ROUND + TIMER STABILITY FIX mounted");
     }else if(tries>=100){
       clearInterval(timer);
       console.warn("LiMATO AI Challenge: #playMode was not created in time.");
@@ -481,5 +484,5 @@ function bootAIChallenge(){
   },100);
 }
 bootAIChallenge();
-console.info("LiMATO Box Challenge v0.6.4 CLEAN CORE loaded");
+console.info("LiMATO Box Challenge v0.6.7 ROUND + TIMER STABILITY FIX loaded");
 })();
