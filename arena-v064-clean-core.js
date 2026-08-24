@@ -1,4 +1,4 @@
-/* LiMATO Box Challenge v0.6.7 — ROUND + TIMER STABILITY FIX
+/* LiMATO Box Challenge v0.6.8 — STABILITY / RACE-CONDITION FIX
    Additive patch: keeps Solo / Invite / Arena / Hard Mode intact.
    AI opponent uses the same Box, rounds, dice-change penalties and scoring rules.
 */
@@ -14,7 +14,8 @@ async function humanPause(){
 const TURN_SECONDS={9:40,12:45,15:50,18:60};
 const ai={
   enabled:false, level:"challenger", results:[], roundLogs:[], running:false,
-  turnTimer:null, turnEndsAt:0, timerOwner:null, starter:"human"
+  turnTimer:null, turnEndsAt:0, timerOwner:null, starter:"human",
+  timerGeneration:0, starting:false, transitioning:false, finishing:false
 };
 
 function turnSeconds(){
@@ -33,6 +34,7 @@ function renderTurnTimer(){
   if(wrap) wrap.style.color=left<=7?"#ff9a9a":"#ffd66d";
 }
 function stopTurnTimer(){
+  ai.timerGeneration++;
   if(ai.turnTimer){clearInterval(ai.turnTimer);ai.turnTimer=null;}
   ai.turnEndsAt=0;
   ai.timerOwner=null;
@@ -42,9 +44,11 @@ function startTurnTimer(owner="human"){
   stopTurnTimer();
   if($("playMode")?.value==="arena" || (owner==="human" && !s?.active))return;
   ai.timerOwner=owner;
+  const generation=++ai.timerGeneration;
   ai.turnEndsAt=Date.now()+turnSeconds()*1000;
   renderTurnTimer();
   ai.turnTimer=setInterval(()=>{
+    if(generation!==ai.timerGeneration)return;
     renderTurnTimer();
     if(Date.now()>=ai.turnEndsAt){
       const owner=ai.timerOwner;
@@ -394,6 +398,7 @@ function finalVerdict(){
 function resetAI(){
   stopTurnTimer();
   syncMode(); ai.results=[]; ai.roundLogs=[]; ai.running=false; ai.starter="human";
+  ai.starting=false; ai.transitioning=false; ai.finishing=false;
   if($("aiStartRoll")){$("aiStartRoll").hidden=true;$("aiStartRoll").innerHTML="";}
   if($("aiVerdict"))$("aiVerdict").textContent="";
   if($("aiRoundInfo"))$("aiRoundInfo").textContent="";
@@ -403,52 +408,80 @@ function resetAI(){
 
 const oldStart=startMatch;
 startMatch=async function(){
-  resetAI(); oldStart();
-  mountTurnTimerInResultsPanel();
-  if(ai.enabled){
-    $("aiScoreCard").hidden=false;
-    renderAI();
-    stopTurnTimer();
-    ai.starter=await decideWhoStarts();
-    renderAI();
-    if(ai.starter==="ai"){
-      await runAIForHumanRound(0);
+  if(ai.starting)return;
+  ai.starting=true;
+  try{
+    resetAI();
+    oldStart();
+    mountTurnTimerInResultsPanel();
+    if(ai.enabled){
+      if($("aiScoreCard")) $("aiScoreCard").hidden=false;
+      renderAI();
+      stopTurnTimer();
+      ai.starter=await decideWhoStarts();
+      renderAI();
+      if(ai.starter==="ai"){
+        if($("next")) $("next").hidden=true;
+        await runAIForHumanRound(0);
+      }
     }
-  }
-  if(s.active) startTurnTimer("human");
+    if(s.active) startTurnTimer("human");
+  }finally{ ai.starting=false; }
 };
+
 const oldFinish=finish;
 finish=function(reason){
+  // A round may be ended by the core, the timer and an older patch almost at once.
+  // Accept exactly one finish for each round.
+  if(ai.finishing || !s.active || s.results.length>=s.round)return;
+  ai.finishing=true;
   stopTurnTimer();
+  const idx=s.round-1;
   const before=s.results.length;
-  const ret=oldFinish(reason);
-  const idx=before;
-  if(ai.enabled&&s.results.length>before){
+  let ret;
+  try{ ret=oldFinish(reason); }
+  finally{ ai.finishing=false; }
+
+  if(ai.enabled && s.results.length>before){
     renderAI();
-    if(ai.starter==="human") runAIForHumanRound(idx).then(()=>{renderAI();if(!s.active)finalVerdict();});
-    else if(!s.active) finalVerdict();
+    if(ai.starter==="human"){
+      // Human finished first: AI must complete the SAME round before NEXT is allowed.
+      if($("next")) $("next").hidden=true;
+      void runAIForHumanRound(idx).then(()=>{
+        renderAI();
+        if(s.active && s.round<s.rounds && $("next")) $("next").hidden=false;
+        if(!s.active) finalVerdict();
+      });
+    }else if(!s.active){
+      finalVerdict();
+    }
   }
   return ret;
 };
+
 const oldNext=nextRound;
 nextRound=async function(){
+  if(ai.transitioning)return;
   if(ai.enabled&&ai.running){setMsg("🤖 AI še zaključuje svojo rundo…");return;}
   if(!s.active||s.round>=s.rounds){
     if($("next")) $("next").hidden=true;
     return;
   }
-  stopTurnTimer();
-  oldNext();
-  renderAI();
-  if(!s.active)return;
-
-  const idx=s.round-1;
-  if(ai.enabled && ai.starter==="ai" && ai.results[idx]===undefined){
+  ai.transitioning=true;
+  try{
+    stopTurnTimer();
     if($("next")) $("next").hidden=true;
-    await runAIForHumanRound(idx);
+    oldNext();
     renderAI();
-  }
-  if(s.active) startTurnTimer("human");
+    if(!s.active)return;
+
+    const idx=s.round-1;
+    if(ai.enabled && ai.starter==="ai" && ai.results[idx]===undefined){
+      await runAIForHumanRound(idx);
+      renderAI();
+    }
+    if(s.active) startTurnTimer("human");
+  }finally{ ai.transitioning=false; }
 };
 
 // En sam NEXT tok. Prestrezanje v capture fazi prepreči starim handlerjem,
@@ -476,7 +509,7 @@ function bootAIChallenge(){
         $("name").addEventListener("change",syncHumanName);
         syncHumanName();
       }
-      console.info("LiMATO Box Challenge v0.6.7 ROUND + TIMER STABILITY FIX mounted");
+      console.info("LiMATO Box Challenge v0.6.8 STABILITY / RACE-CONDITION FIX mounted");
     }else if(tries>=100){
       clearInterval(timer);
       console.warn("LiMATO AI Challenge: #playMode was not created in time.");
@@ -484,5 +517,5 @@ function bootAIChallenge(){
   },100);
 }
 bootAIChallenge();
-console.info("LiMATO Box Challenge v0.6.7 ROUND + TIMER STABILITY FIX loaded");
+console.info("LiMATO Box Challenge v0.6.8 STABILITY / RACE-CONDITION FIX loaded");
 })();

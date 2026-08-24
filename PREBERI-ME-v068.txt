@@ -1,0 +1,27 @@
+LiMATO Box Challenge v0.6.8 — STABILITY / RACE-CONDITION FIX
+
+Na GitHub zamenjaj SAMO ti 2 datoteki:
+1. index.html
+2. arena-v064-clean-core.js
+
+Glavni popravki:
+- odštevalnik ima zaščito pred starimi intervali; star timer ne more več zaključiti nove runde;
+- konec iste runde se lahko izvede samo enkrat (zaščita pred dvojnim rezultatom / dvojnim prehodom);
+- NASLEDNJA RUNDA ima en sam prehod in zaščito pred dvojnim klikom;
+- ko igralec začne rundo, se gumb NASLEDNJA RUNDA med AI-jevim odgovorom skrije in se pokaže šele, ko AI res konča isto rundo;
+- če začne AI, se najprej v celoti konča AI-jeva runda, nato se igralcu zažene nov polni odštevalnik;
+- nova tekma ima zaščito pred večkratnim hkratnim zagonom;
+- ob koncu runde/tekme se prejšnji timer vedno razveljavi.
+
+Časi ostanejo:
+Classic 1–9 = 40 s
+Extended 1–12 = 45 s
+Pro 1–15 = 50 s
+Master 1–18 = 60 s
+
+TEST PO OBJAVI:
+A) SOLO, 3 runde: vsaka runda mora dobiti nov polni timer; po 00:00 samo en rezultat.
+B) PROTI AI, 3 runde: preveri oba možna začetnika; med AI potezo ne klikaj ničesar; NEXT se pokaže šele ob pravem času.
+C) Pusti eno igralčevo rundo do 00:00: rezultat se mora zapisati samo enkrat in igra mora normalno nadaljevati.
+
+Po uploadu počakaj GitHub Pages in naredi Ctrl+F5.
