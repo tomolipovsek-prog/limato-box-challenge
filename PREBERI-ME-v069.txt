@@ -1,0 +1,20 @@
+LiMATO Box Challenge v0.6.9 — STABILITY FIX
+
+Na GitHub zamenjaj SAMO:
+1. index.html
+2. arena-v064-clean-core.js
+
+Glavni popravki:
+- SOLO: vsaka nova runda dobi nov poln odštevalnik; stari interval se prekine.
+- AI: odštevalnik je dejanski rok AI runde, ne samo prikaz.
+- Ko AI-ju čas poteče, AI takoj zaključi rundo z vsoto še odprtih številk + že nastalim pribitkom.
+- AI po 00:00 ne nadaljuje več z meti ali zapiranjem številk.
+- Med AI potezo so igralčevi gumbi zaklenjeni, zato se potezi ne moreta prekrivati.
+- Po AI potezi se igralna plošča vedno vrne igralcu in gumb VRZI KOCKE se ponovno aktivira, kadar je na vrsti igralec.
+- Prehod R1 -> R2 -> R3 ustavi star timer in zažene novega.
+- Dvojni NEXT/dvojni finish ostajata blokirana.
+- Rezultati ostajajo po pravilu LiMATO Box Challenge: NIŽJI skupni rezultat zmaga.
+
+Po GitHub Pages deploymentu naredi Ctrl+F5.
+Najprej: Samostojno, 3 runde.
+Nato: Proti AI, 3 runde.

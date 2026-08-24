@@ -1,4 +1,4 @@
-/* LiMATO Box Challenge v0.6.8 — STABILITY / RACE-CONDITION FIX
+/* LiMATO Box Challenge v0.6.9 — LIVE TIMER / AI TIMEOUT STABILITY FIX
    Additive patch: keeps Solo / Invite / Arena / Hard Mode intact.
    AI opponent uses the same Box, rounds, dice-change penalties and scoring rules.
 */
@@ -279,6 +279,19 @@ function flashAICloseButton(on){
 }
 
 async function showAIRound(roundIndex,r){
+  // v0.6.9: AI animation obeys the SAME live deadline shown by the timer.
+  // If time expires, the round ends immediately with the numbers still open + penalties already incurred.
+  let liveOpen=Array.from({length:s.max},(_,i)=>i+1);
+  let livePenalty=0;
+  const expired=()=>ai.timerOwner==="ai" && (!ai.turnEndsAt || Date.now()>=ai.turnEndsAt);
+  const aiPause=async()=>{
+    if(expired()) return false;
+    const remaining=Math.max(0,ai.turnEndsAt-Date.now());
+    const ms=Math.min(randomThinkMs(),remaining);
+    if(ms>0) await sleep(ms);
+    return !expired();
+  };
+  const timeoutResult=()=>({score:liveOpen.reduce((a,b)=>a+b,0)+livePenalty, penalty:livePenalty, open:liveOpen.slice(), timedOut:true});
   const live=$("aiLive");
   if(!live)return;
 
@@ -306,16 +319,18 @@ async function showAIRound(roundIndex,r){
   live.hidden=false;
   setLiveBase(`🤖 <b>LiMATO AI — runda ${roundIndex+1}</b><br>🧠 Razmišlja…`);
   if($("ai")) $("ai").textContent="🤖 LiMATO AI razmišlja…";
-  await humanPause();
+  if(!(await aiPause())) return timeoutResult();
 
   for(let i=0;i<r.moves.length;i++){
+    if(expired()) return timeoutResult();
     const m=r.moves[i];
 
     if(m.switchPenalty){
       setLiveBase(`🤖 <b>LiMATO AI — runda ${roundIndex+1}</b><br>🔄 Zamenja število kock na <b>${m.dice}</b> &nbsp; (+${m.switchPenalty} pribitka)`);
       $("diceCount").textContent=m.dice;
       $("penalty").textContent=m.switchPenalty;
-      await humanPause();
+      livePenalty+=m.switchPenalty;
+      if(!(await aiPause())) return timeoutResult();
     }
 
     // 1) Show AI's open numbers on the real Box.
@@ -326,15 +341,16 @@ async function showAIRound(roundIndex,r){
     $("dice").innerHTML="";
     setLiveBase(`🤖 <b>LiMATO AI — met ${i+1}</b><br>🎲 Meče kocke…`);
     if($("ai")) $("ai").textContent=`🤖 LiMATO AI meče — met ${i+1}`;
-    await humanPause();
+    if(!(await aiPause())) return timeoutResult();
 
     // 2) The dice visibly roll/fall into the SAME dice area as the player's dice.
     showDice(m.vals);
-    await sleep(900); // existing cube animation is ~820 ms
+    await sleep(Math.min(900,Math.max(0,ai.turnEndsAt-Date.now()))); // never run past AI deadline
+    if(expired()) return timeoutResult();
     $("target").textContent=m.target;
     setLiveBase(`🤖 <b>LiMATO AI — met ${i+1}</b><br>🎲 ${m.vals.join(" + ")} = <b>${m.target}</b><br>🧠 Razmišlja…`);
     if($("ai")) $("ai").textContent=`🤖 AI je vrgel: ${m.vals.join(" + ")} = ${m.target}`;
-    await humanPause();
+    if(!(await aiPause())) return timeoutResult();
 
     if(m.move){
       // 3) Mark AI's chosen tiles, then close them visibly one by one.
@@ -344,49 +360,77 @@ async function showAIRound(roundIndex,r){
       setLiveBase(`🤖 <b>LiMATO AI — met ${i+1}</b><br>🧠 Izbere: <b>${m.move.join(" + ")}</b>`);
       if($("ai")) $("ai").textContent=`🤖 AI zapira: ${m.move.join(" + ")}`;
       flashAICloseButton(true);
-      await humanPause("Zapiram");
+      if(!(await aiPause())) return timeoutResult();
 
       let after=m.openBefore.slice();
       for(const n of m.move){
         after=after.filter(x=>x!==n);
         renderAITiles(after);
         $("score").textContent=after.reduce((a,b)=>a+b,0);
-        await sleep(350);
+        liveOpen=after.slice();
+        await sleep(Math.min(350,Math.max(0,ai.turnEndsAt-Date.now())));
+        if(expired()) return timeoutResult();
       }
       $("selected").textContent="0";
       $("target").textContent="–";
       $("dice").innerHTML="";
       flashAICloseButton(false);
-      await humanPause("Naslednja poteza");
+      if(!(await aiPause())) return timeoutResult();
     }else{
       setLiveBase(`${live.dataset.base||live.innerHTML}<br>⛔ Ni veljavne kombinacije. Runda je končana.`);
       if($("ai")) $("ai").textContent="🤖 AI nima veljavne kombinacije";
-      await humanPause();
+      if(!(await aiPause())) return timeoutResult();
     }
   }
 
   setLiveBase(`🤖 <b>LiMATO AI — konec runde ${roundIndex+1}</b><br>Rezultat: <b>${r.score}</b>${r.penalty?` &nbsp; (pribitek ${r.penalty})`:""}`);
   if($("ai")) $("ai").textContent=`🤖 AI R${roundIndex+1}: ${r.score}`;
-  await humanPause("Konec runde");
+  await sleep(Math.min(700,Math.max(0,ai.turnEndsAt-Date.now())));
   flashAICloseButton(false);
   restoreHumanBoard();
+  return {score:r.score,penalty:r.penalty,open:r.open.slice(),timedOut:false};
 }
 async function runAIForHumanRound(roundIndex){
   if(!ai.enabled||ai.running||ai.results[roundIndex]!==undefined)return;
   ai.running=true;
+  // Human controls are locked for the whole AI turn: no overlapping roll/close/change events.
+  if($("roll")) $("roll").disabled=true;
+  if($("close")) $("close").disabled=true;
+  if($("change")) $("change").disabled=true;
+  if($("diceChoice")) $("diceChoice").disabled=true;
   startTurnTimer("ai");
   if($("ai")) $("ai").textContent="🤖 LiMATO AI razmišlja…";
   const r=await playAIRound(s.max,ai.level);
-  await showAIRound(roundIndex,r);
-  ai.results[roundIndex]=r.score;
-  ai.roundLogs[roundIndex]=r;
+  const actual=await showAIRound(roundIndex,r);
+  const finalRound=actual||r;
+  if(finalRound.timedOut){
+    setLiveBase(`🤖 <b>LiMATO AI — čas je potekel</b><br>Rezultat: <b>${finalRound.score}</b>${finalRound.penalty?` &nbsp; (pribitek ${finalRound.penalty})`:""}`);
+    if($("ai")) $("ai").textContent=`🤖 AI R${roundIndex+1}: ${finalRound.score} — čas`;
+  }
+  ai.results[roundIndex]=finalRound.score;
+  ai.roundLogs[roundIndex]={...r,...finalRound};
   ai.running=false;
   stopTurnTimer();
+  // Always restore the real human board, also after an AI timeout.
+  flashAICloseButton(false);
+  renderTiles();
+  if($("dice")) $("dice").innerHTML="";
+  if($("target")) $("target").textContent=s.target??"–";
+  if($("selected")) $("selected").textContent=sum(s.sel||[]);
+  update();
+  // If AI played first, hand control to the human. If human already finished, NEXT stays in charge.
+  const humanDone=s.results[roundIndex]!==undefined;
+  if(s.active && !humanDone){
+    if($("roll")) $("roll").disabled=false;
+    if($("diceChoice")) $("diceChoice").disabled=false;
+    if($("change")) $("change").disabled=false;
+    if($("close")) $("close").disabled=true;
+  }
   renderAI();
 }
 
 function finalVerdict(){
-  if(!ai.enabled||ai.results.length!==s.rounds)return;
+  if(!ai.enabled||ai.results.length!==s.rounds||ai.results.some(v=>v===undefined))return;
   stopTurnTimer();
   const h=s.results.reduce((a,b)=>a+b,0),a=ai.results.reduce((x,y)=>x+y,0);
   const human=$("name")?.value.trim()||"Igralec";
@@ -509,7 +553,7 @@ function bootAIChallenge(){
         $("name").addEventListener("change",syncHumanName);
         syncHumanName();
       }
-      console.info("LiMATO Box Challenge v0.6.8 STABILITY / RACE-CONDITION FIX mounted");
+      console.info("LiMATO Box Challenge v0.6.9 LIVE TIMER / AI TIMEOUT STABILITY FIX mounted");
     }else if(tries>=100){
       clearInterval(timer);
       console.warn("LiMATO AI Challenge: #playMode was not created in time.");
@@ -517,5 +561,5 @@ function bootAIChallenge(){
   },100);
 }
 bootAIChallenge();
-console.info("LiMATO Box Challenge v0.6.8 STABILITY / RACE-CONDITION FIX loaded");
+console.info("LiMATO Box Challenge v0.6.9 LIVE TIMER / AI TIMEOUT STABILITY FIX loaded");
 })();
