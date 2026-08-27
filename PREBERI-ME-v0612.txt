@@ -1,0 +1,22 @@
+LiMATO BOX CHALLENGE — v0.6.12 SAFE TIMER FIX
+
+NALOŽI / ZAMENJAJ SAMO:
+1. index.html
+2. arena-v063-ai-challenge.js
+
+KAJ JE POPRAVLJENO:
+- spodnji ODŠTEVALNIK v Rezultatih deluje tudi v Samostojno načinu;
+- pri Proti AI ostane obstoječi odštevalnik in logika;
+- v Areni spodnji odštevalnik zrcali ISTI strežniški čas kot zgornji Arena odštevalnik;
+- timer se ob novi rundi ponovno zažene v ne-Arena načinih;
+- Arena še naprej uporablja strežniški timer (ni podvojenega vira časa).
+
+POMEMBNO:
+Met 4 kock za vrstni red v večigralski Areni NI vključen v ta SAFE popravek.
+Za pravilen skupni met vseh online igralcev je potrebna Supabase strežniška sprememba/RPC;
+client-only popravek bi lahko različnim telefonom določil različen vrstni red, zato ga namenoma nisem ponaredil.
+
+TEST:
+- Samostojno: timer mora začeti ob ZAČNI TEKMO in ponovno ob NASLEDNJA RUNDA.
+- Proti AI: preveri timer + R1/R2/R3.
+- Arena: zgornji in spodnji timer morata kazati isti čas.

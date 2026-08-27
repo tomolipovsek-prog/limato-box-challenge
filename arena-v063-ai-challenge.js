@@ -1,4 +1,4 @@
-/* LiMATO Box Challenge v0.6.11 — AI CHALLENGE — LIVE ORDER + ROUND HANDOFF FIX
+/* LiMATO Box Challenge v0.6.12 — UNIFIED TIMER + ARENA TIMER MIRROR
    Additive patch: keeps Solo / Invite / Arena / Hard Mode intact.
    AI opponent uses the same Box, rounds, dice-change penalties and scoring rules.
 */
@@ -23,7 +23,7 @@ function turnSeconds(){
 function renderTurnTimer(){
   const el=$("aiTurnTimer");
   if(!el)return;
-  if(!ai.enabled || !s?.active || !ai.turnEndsAt){el.textContent="--:--";return;}
+  if(!s?.active || !ai.turnEndsAt){el.textContent="--:--";return;}
   const left=Math.max(0,Math.ceil((ai.turnEndsAt-Date.now())/1000));
   el.textContent=`00:${String(left).padStart(2,"0")}`;
   const wrap=$("aiTurnTimerWrap");
@@ -40,7 +40,7 @@ function stopTurnTimer(){
 }
 function startTurnTimer(owner="human"){
   stopTurnTimer();
-  if(!ai.enabled || !s?.active)return;
+  if(!s?.active || $("playMode")?.value==="arena")return;
   ai.turnOwner=owner;
   ai.turnEndsAt=Date.now()+turnSeconds()*1000;
   renderTurnTimer();
@@ -108,7 +108,7 @@ function injectUI(){
   mount.appendChild(box);
   mountTurnTimerInResultsPanel();
 
-  pm.addEventListener("change",syncMode);
+  pm.addEventListener("change",()=>{syncMode(); stopTurnTimer(); syncUnifiedTimerMode();});
   $("name")?.addEventListener("input",()=>{
     if($("aiHumanName")) $("aiHumanName").textContent=$("name").value.trim()||"Igralec";
   });
@@ -396,7 +396,8 @@ const oldStart=startMatch;
 startMatch=async function(){
   resetAI();
   oldStart();
-  if(!ai.enabled) return;
+  mountTurnTimerInResultsPanel();
+  if(!ai.enabled){ if($("playMode")?.value!=="arena" && s.active) startTurnTimer("human"); return; }
 
   $("aiScoreCard").hidden=false;
   mountTurnTimerInResultsPanel();
@@ -412,7 +413,7 @@ startMatch=async function(){
 
 const oldFinish=finish;
 finish=function(reason){
-  if(ai.enabled) stopTurnTimer();
+  if($("playMode")?.value!=="arena") stopTurnTimer();
   const before=s.results.length;
   const ret=oldFinish(reason);
   const idx=before;
@@ -453,6 +454,7 @@ nextRound=async function(){
   }
   oldNext();
   renderAI();
+  if(!ai.enabled && $("playMode")?.value!=="arena" && s.active) startTurnTimer("human");
 
   // In an AI-first match, AI must also open R2/R3/... before the human.
   const newIndex=s.round-1;
@@ -480,6 +482,38 @@ document.addEventListener("click",e=>{
   void nextRound();
 },true);
 
+
+
+// v0.6.12 — keep the lower Results timer visible in every mode.
+// Arena remains server-authoritative; we only MIRROR its existing Arena clock here.
+function syncUnifiedTimerMode(){
+  const mode=$("playMode")?.value;
+  mountTurnTimerInResultsPanel();
+  const wrap=$("aiTurnTimerWrap");
+  if(!wrap)return;
+  if(mode==="arena"){
+    const src=$("arenaTimer");
+    const dst=$("aiTurnTimer");
+    const title=wrap.querySelector("div");
+    if(title) title.textContent="⏱️ ODŠTEVALNIK — IGRALEC";
+    if(src&&dst) dst.textContent=src.textContent||"--:--";
+  }else if(!s?.active){
+    const dst=$("aiTurnTimer"); if(dst)dst.textContent="--:--";
+  }
+}
+const arenaTimerObserver=new MutationObserver(()=>{
+  if($("playMode")?.value==="arena") syncUnifiedTimerMode();
+});
+function hookArenaTimerMirror(){
+  const src=$("arenaTimer");
+  if(src && !src.dataset.v0612Mirror){
+    src.dataset.v0612Mirror="1";
+    arenaTimerObserver.observe(src,{childList:true,subtree:true,characterData:true});
+  }
+  syncUnifiedTimerMode();
+}
+setInterval(hookArenaTimerMirror,500);
+
 function bootAIChallenge(){
   let tries=0;
   const timer=setInterval(()=>{
@@ -495,7 +529,7 @@ function bootAIChallenge(){
         $("name").addEventListener("change",syncHumanName);
         syncHumanName();
       }
-      console.info("LiMATO Box Challenge v0.6.10 AI Challenge STABILITY / LIVE TIMER FIX mounted");
+      console.info("LiMATO Box Challenge v0.6.12 UNIFIED TIMER mounted");
     }else if(tries>=100){
       clearInterval(timer);
       console.warn("LiMATO AI Challenge: #playMode was not created in time.");
@@ -503,5 +537,5 @@ function bootAIChallenge(){
   },100);
 }
 bootAIChallenge();
-console.info("LiMATO Box Challenge v0.6.10 AI Challenge STABILITY / LIVE TIMER FIX loaded");
+console.info("LiMATO Box Challenge v0.6.12 UNIFIED TIMER loaded");
 })();
