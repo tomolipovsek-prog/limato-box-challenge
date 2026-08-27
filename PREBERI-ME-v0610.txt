@@ -1,0 +1,28 @@
+LiMATO Box Challenge v0.6.10 — STABILITY / LIVE ORDER ROLL
+
+ZA GITHUB ZAMENJAJ SAMO:
+1) index.html
+2) arena-v063-ai-challenge.js
+
+NAMEN POPRAVKA:
+- AI in igralec imata dejanski odštevalnik; AI po 00:00 ne nadaljuje poteze.
+- AI timeout se zaključi z rezultatom odprtih številk + dejanski pribitek.
+- Box 1–18: AI začne s 4 kockami, enako kot glavni motor in prikaz.
+- Uvodni met proti AI je v živo: oba vržeta 4 kocke; nižji seštevek začne.
+- Ob izenačenju oba ponovno vržeta 4 kocke, dokler ni vrstni red jasen.
+- Med uvodnim metom in AI potezo so igralčevi gumbi zaklenjeni.
+- Po AI potezi se igralcu vrne njegova plošča in svež timer.
+- Obstoječe pravilo ostaja: NIŽJI skupni rezultat zmaga.
+
+NAMERNO NI VKLJUČENO V TA STABILIZACIJSKI PAKET:
+- nov večigralski lobby/order-roll motor za 2+ spletnih igralcev; ta zahteva poseg v Arena/backend tok in ga ni varno lepiti v javno verzijo brez ločenega testa.
+
+PRED OBJAVO JE OPRAVLJENO:
+- JavaScript syntax check (node --check)
+- preverjeno, da index.html kliče samo eno AI datoteko z novim cache markerjem v=0610
+- preverjena uskladitev Box 1–18 = 4 začetne kocke v core in AI patchu
+
+TEST PO OBJAVI:
+A) Samostojno, 3 runde: timer/reset/runde.
+B) Proti AI, Box 1–18, 3 runde: uvodni 4-kockni met, AI dejansko 4 kocke, oba timerja, prehodi rund, končni zmagovalec.
+C) Pusti AI-ju čas do 00:00: po ničli ne sme narediti novega meta ali zapreti nove kombinacije.
