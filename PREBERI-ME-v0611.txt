@@ -1,0 +1,13 @@
+LiMATO Box Challenge v0.6.11 — LIVE ORDER + ROUND HANDOFF FIX
+
+Popravljeno:
+1. Met 4 kock za vrstni red ni več avtomatski v pol sekunde.
+2. Sistem izmenično določi, kdo prvi opravi met za vrstni red.
+3. Igralec svoj met sproži sam z gumbom VRZI KOCKE.
+4. LiMATO AI svoj met sproži sam.
+5. Rezultat posameznega meta ostane prikazan 3 sekunde.
+6. Ob izenačenju se met ponovi.
+7. Po AI rundi se ob začetku R2/R3 igralcu ponovno eksplicitno omogoči VRZI KOCKE.
+8. Pravilnega rezultata 171 pri Master 1–18 se ne spreminja.
+
+Pomembno: AI-jevo pravilno odigravanje R2/R3 iz v0.6.10 ostaja ohranjeno.

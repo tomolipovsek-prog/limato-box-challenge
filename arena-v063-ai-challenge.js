@@ -1,4 +1,4 @@
-/* LiMATO Box Challenge v0.6.10 — AI CHALLENGE — STABILITY / LIVE TIMER FIX
+/* LiMATO Box Challenge v0.6.11 — AI CHALLENGE — LIVE ORDER + ROUND HANDOFF FIX
    Additive patch: keeps Solo / Invite / Arena / Hard Mode intact.
    AI opponent uses the same Box, rounds, dice-change penalties and scoring rules.
 */
@@ -14,7 +14,7 @@ async function humanPause(){
 const TURN_SECONDS={9:40,12:45,15:50,18:60};
 const ai={
   enabled:false, level:"challenger", results:[], roundLogs:[], running:false,
-  turnTimer:null, turnEndsAt:0, turnOwner:null, starter:"human", generation:0
+  turnTimer:null, turnEndsAt:0, turnOwner:null, starter:"human", generation:0, orderFirst:"human", orderWaiting:false, orderHuman:null, orderAI:null
 };
 
 function turnSeconds(){
@@ -136,25 +136,36 @@ function mountTurnTimerInResultsPanel(){
 async function decideWhoStarts(){
   if(!ai.enabled)return "human";
   const host=$("aiStartRoll");
-  const human=$("name")?.value.trim()||$("player")?.textContent.trim()||"Igralec";
-  if(host){host.hidden=false;host.innerHTML="🎲 <b>MET ZA VRSTNI RED</b><br>Vsak vrže 4 kocke — nižji seštevek začne.";}
-  let hs,as,hd,ad;
+  const human=$("name")?.value.trim()||"Igralec";
+  ai.orderWaiting=true; ai.orderHuman=null; ai.orderAI=null;
+  // Alternate who is invited to make the first live order roll from match to match.
+  const first=ai.orderFirst;
+  ai.orderFirst=first==="human"?"ai":"human";
+  if(host){host.hidden=false;host.innerHTML=`🎲 <b>MET ZA VRSTNI RED</b><br>Vsak vrže 4 kocke — nižji seštevek začne.<br><br>${first==="human"?`👤 <b>${human}</b> prvi: pritisni <b>VRZI KOCKE</b>.`:`🤖 <b>LiMATO AI</b> prvi meče…`}`;}
+  const roll4=()=>Array.from({length:4},()=>1+Math.floor(Math.random()*6));
+  const display=async(vals,label)=>{
+    showDice(vals); const total=vals.reduce((a,b)=>a+b,0);
+    if(host) host.innerHTML=`🎲 <b>MET ZA VRSTNI RED</b><br>${label}: ${vals.join(" + ")} = <b>${total}</b>`;
+    await sleep(3000); return total;
+  };
+  const humanRoll=()=>new Promise(resolve=>{
+    const b=$("roll"); if(!b){resolve(null);return;}
+    b.disabled=false;
+    const handler=async e=>{e.preventDefault();e.stopImmediatePropagation();b.removeEventListener("click",handler,true);b.disabled=true;resolve(await display(roll4(),`👤 ${human}`));};
+    b.addEventListener("click",handler,true);
+  });
+  const aiRoll=async()=>{if(host)host.innerHTML=`🎲 <b>MET ZA VRSTNI RED</b><br>🤖 LiMATO AI meče 4 kocke…`;await sleep(700);return display(roll4(),"🤖 LiMATO AI");};
+  let hs,as;
   do{
-    if(host) host.innerHTML=`🎲 <b>MET ZA VRSTNI RED</b><br>👤 ${human} meče 4 kocke…`;
-    hd=Array.from({length:4},()=>1+Math.floor(Math.random()*6));
-    showDice(hd); await sleep(900);
-    hs=hd.reduce((x,y)=>x+y,0);
-    if(host) host.innerHTML=`🎲 <b>MET ZA VRSTNI RED</b><br>👤 ${human}: ${hd.join(" + ")} = <b>${hs}</b><br>🤖 LiMATO AI meče 4 kocke…`;
-    await sleep(500);
-    ad=Array.from({length:4},()=>1+Math.floor(Math.random()*6));
-    showDice(ad); await sleep(900);
-    as=ad.reduce((x,y)=>x+y,0);
-    if(host) host.innerHTML=`🎲 <b>MET ZA VRSTNI RED</b><br>👤 ${human}: ${hd.join(" + ")} = <b>${hs}</b><br>🤖 LiMATO AI: ${ad.join(" + ")} = <b>${as}</b>${hs===as?"<br>🤝 Izenačeno — oba ponovno mečeta 4 kocke.":""}`;
-    if(hs===as) await sleep(1100);
+    if(first==="human"){hs=await humanRoll();as=await aiRoll();}
+    else{as=await aiRoll();if(host)host.innerHTML+=`<br>👤 <b>${human}</b>: pritisni <b>VRZI KOCKE</b>.`;hs=await humanRoll();}
+    if(hs===as && host){host.innerHTML+=`<br>🤝 <b>Izenačeno — ponovni met.</b>`;await sleep(1500);}
   }while(hs===as);
   const starter=hs<as?"human":"ai";
-  if(host) host.innerHTML+=`<br>🏁 <b>NA POTEZI: ${starter==="human"?human:"LiMATO AI"}</b>`;
+  ai.orderWaiting=false;
+  if(host)host.innerHTML=`🎲 <b>MET ZA VRSTNI RED</b><br>👤 ${human}: <b>${hs}</b> &nbsp; • &nbsp; 🤖 LiMATO AI: <b>${as}</b><br>🏁 <b>NA POTEZI: ${starter==="human"?human:"LiMATO AI"}</b>`;
   $("dice").innerHTML="";
+  await sleep(1200);
   return starter;
 }
 function syncMode(){
@@ -450,7 +461,14 @@ nextRound=async function(){
     await runAIForHumanRound(newIndex);
     renderAI();
   }
-  if(ai.enabled && s.active) startTurnTimer("human");
+  if(ai.enabled && s.active){
+    // oldNext/startRound re-enables the human controls; AI playback may have disabled them again.
+    if($("roll")) $("roll").disabled=false;
+    if($("change")) $("change").disabled=s.switches>=3;
+    if($("diceChoice")) $("diceChoice").disabled=s.switches>=3;
+    if($("close")) $("close").disabled=true;
+    startTurnTimer("human");
+  }
 };
 
 // One and only one NEXT route. Capture phase blocks stale handlers from the core/older patches.
