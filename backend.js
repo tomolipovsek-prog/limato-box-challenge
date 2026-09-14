@@ -189,19 +189,16 @@ function showConsent(){
 
 function mount(){
   const setup=document.querySelector(".setup"),start=$("start");
-  const label=document.createElement("label");label.id="playModeWrap";label.innerHTML=`<span id="playModeLabel"></span><select id="playMode"><option value="solo"></option><option value="online"></option></select>`;
+  const label=document.createElement("label");label.id="playModeWrap";label.innerHTML=`<span id="playModeLabel"></span><select id="playMode"><option value="solo"></option></select>`;
   setup.insertBefore(label,start);
-  $("extrasMount").innerHTML=`<section id="onlinePanel" class="onlinePanel" hidden><div class="onlineTop"><input id="roomCode" maxlength="6" autocomplete="off" autocapitalize="characters"><button id="createRoom" class="primary"></button><button id="joinRoom"></button><span id="roomBadge" class="roomCodeBadge" hidden></span><button id="copyRoom" hidden></button><button id="leaveRoom" class="danger" hidden></button></div><p id="onlineHint" class="onlineHint"></p><p id="onlineStatus" class="onlineStatus"></p></section>`;
-  $("playMode").onchange=()=>{const online=$("playMode").value==="online";$("onlinePanel").hidden=!online;if(!document.getElementById("name").disabled)$("start").disabled=online&&!room.code;if(online&&!configured)status(tx("missing"),"warn")};
-  $("createRoom").onclick=createRoom;$("joinRoom").onclick=joinRoom;$("copyRoom").onclick=async()=>{const link=inviteUrl(room.code);try{await navigator.clipboard.writeText(link);status(tx("copied"),"ok")}catch{prompt("Link",link)}};$("leaveRoom").onclick=leaveRoom;
-  const invited=new URL(location.href).searchParams.get("room");if(invited){$("playMode").value="online";$("onlinePanel").hidden=false;$("roomCode").value=invited.toUpperCase().slice(0,6);$("start").disabled=true}
+  // v0.6.16: legacy Online Room removed from the visible product. Arena is the multiplayer path.
+  $("extrasMount").innerHTML=``;
   translateExtras();showConsent();if(localStorage.getItem("lbc-analytics-consent")==="yes")trackVisit();
 }
 
 function translateExtras(){
   if(!$("playMode"))return;
-  $("playModeLabel").textContent=tx("mode");$("playMode").options[0].textContent=tx("solo");$("playMode").options[1].textContent=tx("online");
-  $("roomCode").placeholder=tx("code");$("createRoom").textContent=tx("create");$("joinRoom").textContent=tx("join");$("copyRoom").textContent=tx("copy");$("leaveRoom").textContent=tx("leave");$("onlineHint").textContent=tx("onlineHint");
+  $("playModeLabel").textContent=tx("mode");$("playMode").options[0].textContent=tx("solo");
   if($("consentText")){ $("consentText").textContent=tx("consent");$("consentYes").textContent=tx("allow");$("consentNo").textContent=tx("decline") }
   if(room.code)refreshLeaderboard();
 }

@@ -1,0 +1,9 @@
+LiMATO BOX CHALLENGE v0.6.16 — CLEAN MULTIPLAYER + MASTER HELP
+
+1. Ohranja potrjeno delovanje AI Challenge iz v0.6.15.
+2. Vidna možnost »Online soba / Online Room« je odstranjena. Arena ostaja multiplayer pot.
+3. NAVODILA so dopolnjena z AI Challenge, Arena vrstnim redom/časom, Community Voice in HARD načinom.
+4. Novi sklopi navodil so prevedeni v vseh 24 jezikov igre.
+5. Arena jedro in pravila igre niso prepisana.
+
+Naloži 4 datoteke iz ZIP-a v isti GitHub direktorij in zamenjaj obstoječe.
