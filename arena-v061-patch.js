@@ -57,21 +57,7 @@
     box.textContent=TXT[lang()].hint;
   }
 
-  function appendHelp(){
-    const body=q("helpBody");
-    if(!body || q("helpOverlay")?.hidden) return;
-    body.querySelectorAll("[data-v061-help]").forEach(x=>x.remove());
-    const t=TXT[lang()];
-    const sec=document.createElement("section");
-    sec.dataset.v061Help="arena";
-    sec.innerHTML=`<h3>${t.title}</h3><p>${t.body}</p>`;
-    body.appendChild(sec);
-
-    const sec2=document.createElement("section");
-    sec2.dataset.v061Help="community";
-    sec2.innerHTML=`<h3>${t.community}</h3><p>${t.communityBody}</p>`;
-    body.appendChild(sec2);
-  }
+  function appendHelp(){ /* v0.6.17: MASTER help lives in script.js for all 24 languages. */ }
 
   function wireCommunityButton(){
     const area=q("v060CommentBody");

@@ -1,0 +1,9 @@
+LiMATO Box Challenge v0.6.17 — MASTER HELP LOCALIZATION FIX
+
+Popravek:
+- odstranjeno staro angleško dodajanje Arena/Community Voice/HARD navodil iz v0.6.1 in v0.6.2 patch datotek;
+- MASTER navodila zdaj sestavlja samo script.js;
+- novi sklopi so zato prikazani v izbranem jeziku in niso podvojeni;
+- ohranjeni so AI Challenge v0.6.15, Arena funkcionalnost in odstranitev Online sobe.
+
+Za GitHub prepiši vseh 6 datotek iz ZIP-a.

@@ -3,7 +3,7 @@
 (function(){
   "use strict";
   const q=id=>document.getElementById(id);
-  const V="0.6.4";
+  const V="0.6.3";
   const HARD_PENALTY=2;
   let hardMistakes=0;
 
@@ -89,17 +89,7 @@
     },true);
   }
 
-  function appendHelp(){
-    const body=q("helpBody");
-    if(!body || q("helpOverlay")?.hidden) return;
-    body.querySelectorAll("[data-v062-help]").forEach(x=>x.remove());
-    const sec=document.createElement("section");
-    sec.dataset.v062Help="hard";
-    sec.innerHTML=lang()==="sl"
-      ?`<h3>🔥 HARD način</h3><p>V načinu HARD lahko potrdiš tudi napačno izbrano vsoto. Vsaka napačna potrditev doda +${HARD_PENALTY} pribitka, številke ostanejo odprte in poskusiš znova. V Areni ura med napako ne obstane.</p>`
-      :`<h3>🔥 HARD mode</h3><p>In HARD mode you may confirm an incorrect selected sum. Each wrong confirmation adds +${HARD_PENALTY} penalty points; the numbers stay open and you try again. In Arena, the clock does not stop for the mistake.</p>`;
-    body.appendChild(sec);
-  }
+  function appendHelp(){ /* v0.6.17: MASTER help lives in script.js for all 24 languages. */ }
 
   function refresh(){updateVersion();mountDifficulty();translate();installHardMode();appendHelp()}
   setTimeout(refresh,120);
