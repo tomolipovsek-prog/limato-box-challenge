@@ -1,0 +1,16 @@
+LiMATO Box Challenge v0.6.18 — AI FINAL ROUND TIMER FIX
+
+Kirurški popravek po testu Master 1–18, 3 runde:
+- AI odštevalnik se zdaj pravilno zažene tudi v ZADNJI AI rundi.
+- Vzrok: po zadnji človeški rundi osnovna igra nastavi konec tekme (s.active=false), AI pa mora še odigrati svojo isto zadnjo rundo. Stari timer se zato ni zagnal.
+- Človeški timer ostaja vezan na aktivno rundo.
+- AI timer je dovoljen samo med dejanskim AI playbackom.
+- Časi ostajajo nespremenjeni: Classic 40 s, Extended 45 s, Pro 50 s, Master 60 s na rundo.
+- Tempo AI, avtomatski prehod rund, Arena, pravila in prevodi NISO spremenjeni.
+
+Na GitHub prepiši samo te 3 datoteke:
+1. index.html
+2. arena-v063-ai-challenge.js
+3. PREBERI-ME-v0618.txt
+
+Po GitHub Pages deployu naredi Ctrl+F5 in testiraj predvsem Master 1–18 / 3 runde.

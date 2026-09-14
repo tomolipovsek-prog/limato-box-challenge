@@ -1,4 +1,4 @@
-/* LiMATO Box Challenge v0.6.15 — AI AUTO ROUND FLOW + NATURAL PACE
+/* LiMATO Box Challenge v0.6.18 — AI FINAL ROUND TIMER FIX
    Additive patch: keeps Solo / Invite / Arena / Hard Mode intact.
    AI opponent uses the same Box, rounds, dice-change penalties and scoring rules.
 */
@@ -49,7 +49,12 @@ function stopTurnTimer(){
 }
 function startTurnTimer(owner="human"){
   stopTurnTimer();
-  if(!s?.active || $("playMode")?.value==="arena")return;
+  if($("playMode")?.value==="arena")return;
+  // v0.6.18: after the human finishes the LAST round, core sets s.active=false
+  // before LiMATO AI has replayed that same round. Human timers still require
+  // an active round; AI timers are allowed while the AI playback is running.
+  if(owner==="human" && !s?.active)return;
+  if(owner==="ai" && !ai.running)return;
   ai.turnOwner=owner;
   ai.turnEndsAt=Date.now()+turnSeconds()*1000;
   renderTurnTimer();
@@ -613,7 +618,7 @@ function bootAIChallenge(){
         $("name").addEventListener("change",syncHumanName);
         syncHumanName();
       }
-      console.info("LiMATO Box Challenge v0.6.15 AUTO ROUND FLOW mounted");
+      console.info("LiMATO Box Challenge v0.6.18 AI FINAL ROUND TIMER FIX mounted");
     }else if(tries>=100){
       clearInterval(timer);
       console.warn("LiMATO AI Challenge: #playMode was not created in time.");
@@ -621,5 +626,5 @@ function bootAIChallenge(){
   },100);
 }
 bootAIChallenge();
-console.info("LiMATO Box Challenge v0.6.15 AUTO ROUND FLOW loaded");
+console.info("LiMATO Box Challenge v0.6.18 AI FINAL ROUND TIMER FIX loaded");
 })();
