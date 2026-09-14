@@ -1,0 +1,23 @@
+LiMATO BOX CHALLENGE — v0.6.13 AI PACE + AUTO TURN FLOW
+
+NALOŽI / ZAMENJAJ SAMO:
+1. index.html
+2. arena-v063-ai-challenge.js
+
+KAJ JE POPRAVLJENO:
+- Classic 1–9: en celoten AI met traja približno 1,0–4,5 s (ni vsak met 4,5 s).
+- Extended / Pro / Master: tempo se sorazmerno podaljša glede na čas runde 45 / 50 / 60 s.
+- AI še vedno igra na ISTI vidni igralni mizi: kocke, ciljna vsota, izbira in zapiranje številk so vidni.
+- Prehod IGRALEC -> AI je avtomatski; AI po zaključku igralčeve runde ne potrebuje ročnega zagona.
+- Prehod AI -> IGRALEC ostane avtomatski.
+- Timer se pri menjavi igralca pravilno preda naslednjemu.
+- Arena in njen strežniški timer nista spremenjena.
+- Online/Invite Room v tem koraku še ni odstranjen; to je naslednji ločen poseg.
+
+TEST NAJPREJ:
+A) Proti AI -> Classic 1–9 -> 3 runde.
+B) Enkrat naj začne Lipe67, drugič AI (met za vrstni red).
+C) Preveri oba prehoda brez ročnega zagona AI.
+D) Šele nato Extended / Pro / Master.
+
+Če je ta test čist, nadaljujemo z odstranitvijo Online sobe in Arena navodili.
