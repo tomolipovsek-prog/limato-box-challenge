@@ -1,4 +1,4 @@
-/* LiMATO Box Challenge v0.6.13 — AI PACE + AUTO TURN FLOW
+/* LiMATO Box Challenge v0.6.14 — AI NATURAL PACE + HARD AUTO HANDOFF
    Additive patch: keeps Solo / Invite / Arena / Hard Mode intact.
    AI opponent uses the same Box, rounds, dice-change penalties and scoring rules.
 */
@@ -13,14 +13,17 @@ function aiPaceScale(max=Number(s?.max)||9){
 }
 function aiThrowBudgetMs(max=Number(s?.max)||9){
   const k=aiPaceScale(max);
-  return Math.round((1000+Math.random()*3500)*k);
+  // v0.6.14: every match gets its own natural tempo. Classic testing target is
+  // roughly 60–70 s for three typical rounds, but individual throws still vary.
+  const personality=ai.matchTempo || 1.42;
+  return Math.round((1000+Math.random()*3500)*k*personality);
 }
 async function aiPause(ms){ await sleep(Math.max(80,Math.round(ms))); }
 
 const TURN_SECONDS={9:40,12:45,15:50,18:60};
 const ai={
   enabled:false, level:"challenger", results:[], roundLogs:[], running:false,
-  turnTimer:null, turnEndsAt:0, turnOwner:null, starter:"human", generation:0, orderFirst:"human", orderWaiting:false, orderHuman:null, orderAI:null
+  turnTimer:null, turnEndsAt:0, turnOwner:null, starter:"human", generation:0, orderFirst:"human", orderWaiting:false, orderHuman:null, orderAI:null, matchTempo:1.42, lastHumanResultsSeen:0
 };
 
 function turnSeconds(){
@@ -416,6 +419,8 @@ function finalVerdict(){
 function resetAI(){
   stopTurnTimer();
   syncMode(); ai.results=[]; ai.roundLogs=[]; ai.running=false; ai.starter="human";
+  ai.matchTempo=1.32+Math.random()*.23; // 1.32–1.55: match-to-match human variation
+  ai.lastHumanResultsSeen=0;
   if($("aiStartRoll")){$("aiStartRoll").hidden=true;$("aiStartRoll").innerHTML="";}
   if($("aiVerdict"))$("aiVerdict").textContent="";
   if($("aiRoundInfo"))$("aiRoundInfo").textContent="";
@@ -517,6 +522,31 @@ document.addEventListener("click",e=>{
 },true);
 
 
+
+// v0.6.14 — HARD AUTO HANDOFF WATCHDOG.
+// Some older core handlers can retain their original finish() reference. Instead of trusting
+// only the wrapper above, observe the authoritative human result array. The moment a new
+// human round result appears, AI takes that same round automatically — no NEXT click.
+setInterval(()=>{
+  try{
+    if(!ai.enabled || ai.running || !s || !Array.isArray(s.results)) return;
+    const humanCount=s.results.length;
+    if(humanCount<=0){ ai.lastHumanResultsSeen=0; return; }
+    ai.lastHumanResultsSeen=Math.max(ai.lastHumanResultsSeen,humanCount);
+    const idx=humanCount-1;
+    if(ai.results[idx]===undefined){
+      if($("next")) $("next").hidden=true;
+      if($("ai")) $("ai").textContent="🤖 Na potezi: LiMATO AI";
+      void runAIForHumanRound(idx).then(()=>{
+        renderAI();
+        const humanDone=s.results.length>=s.rounds;
+        const aiDone=ai.results.filter(v=>v!==undefined).length>=s.rounds;
+        if(humanDone && aiDone){ if($("next")) $("next").hidden=true; finalVerdict(); }
+        else if(!humanDone){ if($("next")) $("next").hidden=false; setMsg("Runda je zaključena. Nadaljuj v naslednjo rundo."); }
+      });
+    }
+  }catch(_e){}
+},120);
 
 // v0.6.12 — keep the lower Results timer visible in every mode.
 // Arena remains server-authoritative; we only MIRROR its existing Arena clock here.

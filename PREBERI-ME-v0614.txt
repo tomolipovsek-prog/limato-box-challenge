@@ -1,0 +1,12 @@
+LiMATO Box Challenge v0.6.14 — AI NATURAL PACE + HARD AUTO HANDOFF
+
+TESTNI POPRAVEK:
+1. Človek -> LiMATO AI mora steči SAMODEJNO takoj po koncu človeške runde.
+2. Dodan je robusten nadzor rezultata runde, zato starejši handler ne more več zahtevati ročnega klika za prebujanje AI.
+3. AI tempo je počasnejši in različen od tekme do tekme (naključni faktor 1.32–1.55).
+4. Classic 1–9 / 3 runde: praktični cilj približno 60–70 sekund skupnega AI igranja pri tipični dolžini rund; čas ni fiksen.
+5. Posamezni meti ostajajo različno dolgi. Daljši Boxi se sorazmerno prilagodijo.
+6. Pravila, matematika kock in AI kazni za menjavo kock niso spremenjeni.
+7. Arena in prevodi v tem testnem popravku niso spreminjani.
+
+TEST: Classic 1–9, 3 runde, Proti AI, Izzivalec. Izmeri vse tri AI runde in preveri predvsem, da po tvojem koncu runde AI začne sam.
