@@ -1,0 +1,13 @@
+LiMATO Box Challenge v0.6.15 — AI AUTO ROUND FLOW
+
+Popravki po testu 14. 9. 2026:
+- AI Challenge po koncu obeh potez v rundi SAMODEJNO nadaljuje v naslednjo rundo.
+- Za začetek naslednje AI poteze ni več potreben klik NASLEDNJA RUNDA.
+- AI odštevalnik ostaja pravilen po Boxu: Classic 40 s, Extended 45 s, Pro 50 s, Master 60 s na rundo.
+- AI tempo je upočasnjen in naključno razgiban; cilj Classic je približno 20–24 s za tipično AI rundo, brez fiksnega časa.
+- Arena in prevodi v tem popravku niso spremenjeni.
+
+Naloži/prekrij:
+1. index.html
+2. arena-v063-ai-challenge.js
+3. PREBERI-ME-v0615.txt

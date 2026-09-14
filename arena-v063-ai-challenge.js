@@ -1,4 +1,4 @@
-/* LiMATO Box Challenge v0.6.14 — AI NATURAL PACE + HARD AUTO HANDOFF
+/* LiMATO Box Challenge v0.6.15 — AI AUTO ROUND FLOW + NATURAL PACE
    Additive patch: keeps Solo / Invite / Arena / Hard Mode intact.
    AI opponent uses the same Box, rounds, dice-change penalties and scoring rules.
 */
@@ -15,7 +15,7 @@ function aiThrowBudgetMs(max=Number(s?.max)||9){
   const k=aiPaceScale(max);
   // v0.6.14: every match gets its own natural tempo. Classic testing target is
   // roughly 60–70 s for three typical rounds, but individual throws still vary.
-  const personality=ai.matchTempo || 1.42;
+  const personality=ai.matchTempo || 1.95;
   return Math.round((1000+Math.random()*3500)*k*personality);
 }
 async function aiPause(ms){ await sleep(Math.max(80,Math.round(ms))); }
@@ -419,8 +419,8 @@ function finalVerdict(){
 function resetAI(){
   stopTurnTimer();
   syncMode(); ai.results=[]; ai.roundLogs=[]; ai.running=false; ai.starter="human";
-  ai.matchTempo=1.32+Math.random()*.23; // 1.32–1.55: match-to-match human variation
-  ai.lastHumanResultsSeen=0;
+  ai.matchTempo=1.78+Math.random()*.34; // 1.78–2.12: target ~20–24 s typical Classic AI round
+  ai.lastHumanResultsSeen=0; aiAutoAdvancePending=false;
   if($("aiStartRoll")){$("aiStartRoll").hidden=true;$("aiStartRoll").innerHTML="";}
   if($("aiVerdict"))$("aiVerdict").textContent="";
   if($("aiRoundInfo"))$("aiRoundInfo").textContent="";
@@ -447,6 +447,27 @@ startMatch=async function(){
   if(s.active){$("roll").disabled=false;$("change").disabled=s.switches>=3;$("diceChoice").disabled=s.switches>=3;startTurnTimer("human");}
 };
 
+// v0.6.15 — in AI Challenge the match flows by itself. Once BOTH players have
+// completed the current round, advance to the next round automatically.
+let aiAutoAdvancePending=false;
+function scheduleAIAutoAdvance(){
+  if(!ai.enabled || aiAutoAdvancePending || ai.running || !s?.active) return;
+  const idx=s.round-1;
+  if(idx<0 || s.results.length<=idx || ai.results[idx]===undefined) return;
+  if(s.round>=s.rounds) return;
+  aiAutoAdvancePending=true;
+  if($("next")) $("next").hidden=true;
+  setMsg("Runda je zaključena. Samodejno nadaljujem…");
+  setTimeout(async()=>{
+    try{
+      if(!ai.enabled || ai.running || !s?.active || s.round>=s.rounds) return;
+      const doneIdx=s.round-1;
+      if(s.results.length<=doneIdx || ai.results[doneIdx]===undefined) return;
+      await nextRound();
+    } finally { aiAutoAdvancePending=false; }
+  },650);
+}
+
 const oldFinish=finish;
 finish=function(reason){
   if($("playMode")?.value!=="arena") stopTurnTimer();
@@ -471,8 +492,7 @@ finish=function(reason){
         if($("next")) $("next").hidden=true;
         finalVerdict();
       }else if(!humanDone){
-        if($("next")) $("next").hidden=false;
-        setMsg("Runda je zaključena. Nadaljuj v naslednjo rundo.");
+        scheduleAIAutoAdvance();
       }
     })();
   }
@@ -542,7 +562,7 @@ setInterval(()=>{
         const humanDone=s.results.length>=s.rounds;
         const aiDone=ai.results.filter(v=>v!==undefined).length>=s.rounds;
         if(humanDone && aiDone){ if($("next")) $("next").hidden=true; finalVerdict(); }
-        else if(!humanDone){ if($("next")) $("next").hidden=false; setMsg("Runda je zaključena. Nadaljuj v naslednjo rundo."); }
+        else if(!humanDone){ scheduleAIAutoAdvance(); }
       });
     }
   }catch(_e){}
@@ -593,7 +613,7 @@ function bootAIChallenge(){
         $("name").addEventListener("change",syncHumanName);
         syncHumanName();
       }
-      console.info("LiMATO Box Challenge v0.6.13 AI PACE + AUTO TURN FLOW mounted");
+      console.info("LiMATO Box Challenge v0.6.15 AUTO ROUND FLOW mounted");
     }else if(tries>=100){
       clearInterval(timer);
       console.warn("LiMATO AI Challenge: #playMode was not created in time.");
@@ -601,5 +621,5 @@ function bootAIChallenge(){
   },100);
 }
 bootAIChallenge();
-console.info("LiMATO Box Challenge v0.6.13 AI PACE + AUTO TURN FLOW loaded");
+console.info("LiMATO Box Challenge v0.6.15 AUTO ROUND FLOW loaded");
 })();
