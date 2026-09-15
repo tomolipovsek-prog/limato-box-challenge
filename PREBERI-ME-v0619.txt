@@ -1,0 +1,13 @@
+LiMATO Box Challenge v0.6.19 — AI FINAL ROUND TIMER FIX COMPLETE
+
+Ciljni popravek:
+- Proti AI: ko igralec konča zadnjo rundo in core nastavi s.active=false, LiMATO AI lahko svojo zadnjo rundo še vedno normalno odigra z vidnim odštevalnikom.
+- Master 1–18 ostane 60 sekund.
+- AI logika, tempo, kocke, kazni, rezultati, Arena in Supabase niso spremenjeni.
+- index.html uporablja cache-buster ?v=0619.
+
+Za GitHub zamenjaj samo:
+1. arena-v063-ai-challenge.js
+2. index.html
+
+PREBERI-ME je samo dokumentacija.

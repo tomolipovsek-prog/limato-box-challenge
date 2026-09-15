@@ -1,4 +1,4 @@
-/* LiMATO Box Challenge v0.6.18 — AI FINAL ROUND TIMER FIX
+/* LiMATO Box Challenge v0.6.19 — AI FINAL ROUND TIMER FIX COMPLETE
    Additive patch: keeps Solo / Invite / Arena / Hard Mode intact.
    AI opponent uses the same Box, rounds, dice-change penalties and scoring rules.
 */
@@ -32,7 +32,7 @@ function turnSeconds(){
 function renderTurnTimer(){
   const el=$("aiTurnTimer");
   if(!el)return;
-  if(!s?.active || !ai.turnEndsAt){el.textContent="--:--";return;}
+  if((!s?.active && !(ai.running && ai.turnOwner==="ai")) || !ai.turnEndsAt){el.textContent="--:--";return;}
   const left=Math.max(0,Math.ceil((ai.turnEndsAt-Date.now())/1000));
   el.textContent=`00:${String(left).padStart(2,"0")}`;
   const wrap=$("aiTurnTimerWrap");
@@ -586,7 +586,7 @@ function syncUnifiedTimerMode(){
     const title=wrap.querySelector("div");
     if(title) title.textContent="⏱️ ODŠTEVALNIK — IGRALEC";
     if(src&&dst) dst.textContent=src.textContent||"--:--";
-  }else if(!s?.active){
+  }else if(!s?.active && !(ai.running && ai.turnOwner==="ai")){
     const dst=$("aiTurnTimer"); if(dst)dst.textContent="--:--";
   }
 }
@@ -618,7 +618,7 @@ function bootAIChallenge(){
         $("name").addEventListener("change",syncHumanName);
         syncHumanName();
       }
-      console.info("LiMATO Box Challenge v0.6.18 AI FINAL ROUND TIMER FIX mounted");
+      console.info("LiMATO Box Challenge v0.6.19 AI FINAL ROUND TIMER FIX COMPLETE mounted");
     }else if(tries>=100){
       clearInterval(timer);
       console.warn("LiMATO AI Challenge: #playMode was not created in time.");
@@ -626,5 +626,5 @@ function bootAIChallenge(){
   },100);
 }
 bootAIChallenge();
-console.info("LiMATO Box Challenge v0.6.18 AI FINAL ROUND TIMER FIX loaded");
+console.info("LiMATO Box Challenge v0.6.19 AI FINAL ROUND TIMER FIX COMPLETE loaded");
 })();
