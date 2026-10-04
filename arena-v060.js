@@ -40,7 +40,8 @@
     snapshotTimer:null,
     watchdogBusy:false,
     queueStartedAt:0,
-    aiBusy:false
+    aiBusy:false,
+    aiTurnKey:null
   };
 
   function lang(){ return q("lang")?.value || "sl"; }
@@ -570,8 +571,9 @@
 
     runWatchdog();
     if(arena.match.status==="finished"){
-      arena.myTurn=false;
+      arena.myTurn=false;arena.currentTurnKey=null;arena.aiTurnKey=null;arena.aiBusy=false;
       clearInterval(arena.countdownTimer);arena.countdownTimer=null;
+      try{ if(typeof s!=="undefined") s.active=false; }catch(e){}
       setArenaStatus("🏆 Arena je končana. Najnižji skupni rezultat zmaga.","ok");
       q("arenaCancel").textContent="ZAPRI ARENO";
       q("roll").disabled=true;q("close").disabled=true;q("next").disabled=true;
@@ -581,18 +583,23 @@
   }
 
   async function driveAITurn(bot,turnKey){
-    if(arena.aiBusy||arena.currentTurnKey===turnKey)return;
+    if(arena.aiBusy||arena.aiTurnKey===turnKey)return;
     if(!window.LiMATOAIEngine?.playRound)return;
-    arena.aiBusy=true;arena.currentTurnKey=turnKey;
+    arena.aiBusy=true;arena.aiTurnKey=turnKey;
     try{
       const level=bot.skill||"challenger";
       const result=await window.LiMATOAIEngine.playRound(arena.match.max_number,level);
-      await wait(650+Math.floor(Math.random()*900));
+      await new Promise(resolve=>setTimeout(resolve,650+Math.floor(Math.random()*900)));
       await arena.db.completeAITurn(
         arena.matchId,bot.seat,arena.match.current_round,result.score
       );
       await refreshMatch();
-    }finally{arena.aiBusy=false}
+    }catch(e){
+      arena.aiTurnKey=null; // allow a safe retry on the next refresh
+      console.warn("LiMATO Arena AI turn:",e);
+    }finally{
+      arena.aiBusy=false;
+    }
   }
 
   function renderArena(){
@@ -827,7 +834,7 @@
     arena.matchTimer=arena.countdownTimer=null;
     if(arena.channel) await arena.db?.unsubscribe(arena.channel);
     arena.channel=null;arena.matchId=null;arena.match=null;arena.players=[];arena.states=[];
-    arena.myTurn=false;arena.active=false;arena.currentTurnKey=null;arena.submittedTurnKey=null;
+    arena.myTurn=false;arena.active=false;arena.currentTurnKey=null;arena.submittedTurnKey=null;arena.aiTurnKey=null;arena.aiBusy=false;
     q("arenaMatch").hidden=true;q("arenaFind").disabled=false;q("arenaCancel").hidden=true;
     ["name","mode","rounds","persona","playMode"].forEach(id=>{const el=q(id);if(el)el.disabled=false});
     q("arenaCancel").textContent=tx("cancel");
