@@ -112,15 +112,22 @@ async function cancelQueue(){
 
 async function getMatch(matchId){
   const u=await ensureAuth();
-  const [{data:match,error:me},{data:players,error:pe},{data:states,error:se}] = await Promise.all([
+  const [{data:match,error:me},{data:humans,error:pe},{data:states,error:se},{data:bots,error:be}] = await Promise.all([
     sb.from("lbc_arena_matches").select("*").eq("id",matchId).single(),
     sb.from("lbc_arena_players").select("*").eq("match_id",matchId).order("seat",{ascending:true}),
-    sb.from("lbc_arena_state").select("*").eq("match_id",matchId)
+    sb.from("lbc_arena_state").select("*").eq("match_id",matchId),
+    sb.from("lbc_arena_ai_slots").select("*").eq("match_id",matchId).order("seat",{ascending:true})
   ]);
   if(me) throw me;
   if(pe) throw pe;
   if(se) throw se;
-  return {match,players:players||[],states:states||[],userId:u.id};
+  if(be) throw be;
+  const ai=(bots||[]).map(b=>({
+    ...b,is_ai:true,owner_id:`ai:${matchId}:${b.seat}`,
+    completed_games:0
+  }));
+  const players=[...(humans||[]),...ai].sort((a,b)=>a.seat-b.seat);
+  return {match,players,states:states||[],userId:u.id};
 }
 
 function subscribeMatch(matchId, onChange){
@@ -129,6 +136,7 @@ function subscribeMatch(matchId, onChange){
     .on("postgres_changes",{event:"*",schema:"public",table:"lbc_arena_matches",filter:`id=eq.${matchId}`},onChange)
     .on("postgres_changes",{event:"*",schema:"public",table:"lbc_arena_players",filter:`match_id=eq.${matchId}`},onChange)
     .on("postgres_changes",{event:"*",schema:"public",table:"lbc_arena_state",filter:`match_id=eq.${matchId}`},onChange)
+    .on("postgres_changes",{event:"*",schema:"public",table:"lbc_arena_ai_slots",filter:`match_id=eq.${matchId}`},onChange)
     .subscribe();
   return ch;
 }
@@ -176,6 +184,22 @@ async function leaveMatch(matchId){
   const {data,error}=await sb.rpc("lbc_arena_leave_match",{p_match_id:matchId});
   if(error) throw error;
   return data;
+}
+
+async function tryFillAI(){
+  const {data,error}=await sb.rpc("lbc_arena_try_fill_ai");
+  if(error) throw error;
+  const row=Array.isArray(data)?data[0]:data;
+  return row||null;
+}
+
+async function completeAITurn(matchId, seat, roundNumber, roundScore){
+  const {data,error}=await sb.rpc("lbc_arena_complete_ai_turn",{
+    p_match_id:matchId,p_seat:Number(seat),
+    p_round_number:Number(roundNumber),p_round_score:Number(roundScore)
+  });
+  if(error) throw error;
+  return Array.isArray(data)?data[0]:data;
 }
 
 async function loadCommunityComments(language){
@@ -233,6 +257,8 @@ window.LBCArenaDB={
   completeTurn,
   forceTimeout,
   leaveMatch,
+  tryFillAI,
+  completeAITurn,
   loadCommunityComments,
   submitCommunityComment,
   logModeration

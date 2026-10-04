@@ -256,6 +256,9 @@ async function playAIRound(max,level){
   return {score:open.reduce((a,b)=>a+b,0)+penalty,penalty,throws,open,moves};
 }
 
+window.LiMATOAIEngine=window.LiMATOAIEngine||{};
+window.LiMATOAIEngine.playRound=(max,level="challenger")=>playAIRound(Number(max)||9,level);
+
 function levelName(){return ai.level==="beginner"?"🟢 Začetnik":ai.level==="master"?"🔴 Mojster":"🟡 Izzivalec"}
 function renderAI(){
   if(!$("aiScoreCard"))return;

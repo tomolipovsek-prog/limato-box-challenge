@@ -38,7 +38,9 @@
     submittedTurnKey:null,
     lastDice:[],
     snapshotTimer:null,
-    watchdogBusy:false
+    watchdogBusy:false,
+    queueStartedAt:0,
+    aiBusy:false
   };
 
   function lang(){ return q("lang")?.value || "sl"; }
@@ -471,6 +473,7 @@
     try{
       await stopArenaTimers(false);
       arena.active=true;
+      arena.queueStartedAt=Date.now();
       q("arenaFind").disabled=true;
       q("arenaCancel").hidden=false;
       q("arenaMatch").hidden=true;
@@ -500,6 +503,10 @@
       const r=await arena.db.pollQueue();
       if(!r) return;
       if(r.match_id) return enterMatch(r.match_id);
+      if(Date.now()-arena.queueStartedAt>=6000){
+        const f=await arena.db.tryFillAI();
+        if(f?.out_match_id) return enterMatch(f.out_match_id);
+      }
       setArenaStatus(tx("searching","…"),"warn");
     }catch(e){setArenaStatus(e?.message||tx("arenaError"),"bad")}
   }
@@ -549,7 +556,11 @@
     const isMine=current?.owner_id===arena.userId && arena.match.status==="playing";
     const turnKey=`${arena.matchId}:${arena.match.current_round}:${arena.match.current_seat}`;
 
-    if(isMine && (!arena.myTurn || arena.currentTurnKey!==turnKey)){
+    if(current?.is_ai && arena.match.status==="playing"){
+      arena.myTurn=false;
+      disableCoreForSpectator();
+      driveAITurn(current,turnKey).catch(console.warn);
+    }else if(isMine && (!arena.myTurn || arena.currentTurnKey!==turnKey)){
       arena.myTurn=true;arena.currentTurnKey=turnKey;arena.submittedTurnKey=null;
       beginMyTurn();
     }else if(!isMine){
@@ -567,6 +578,21 @@
       ["name","mode","rounds","persona","playMode"].forEach(id=>{const el=q(id);if(el)el.disabled=false});
       syncProfileCount();
     }
+  }
+
+  async function driveAITurn(bot,turnKey){
+    if(arena.aiBusy||arena.currentTurnKey===turnKey)return;
+    if(!window.LiMATOAIEngine?.playRound)return;
+    arena.aiBusy=true;arena.currentTurnKey=turnKey;
+    try{
+      const level=bot.skill||"challenger";
+      const result=await window.LiMATOAIEngine.playRound(arena.match.max_number,level);
+      await wait(650+Math.floor(Math.random()*900));
+      await arena.db.completeAITurn(
+        arena.matchId,bot.seat,arena.match.current_round,result.score
+      );
+      await refreshMatch();
+    }finally{arena.aiBusy=false}
   }
 
   function renderArena(){
@@ -672,7 +698,7 @@
   }
 
   async function runWatchdog(){
-    if(arena.watchdogBusy||arena.myTurn||!arena.match||arena.match.status!=="playing")return;
+    if(arena.watchdogBusy||arena.aiBusy||arena.myTurn||!arena.match||arena.match.status!=="playing")return;
     const left=secondsLeft();
     if(left!==null && left<-0.25){
       arena.watchdogBusy=true;
